@@ -1,0 +1,40 @@
+/* 
+<section className='full-page'>
+      <article className='setting-box'>
+        <a href='http://localhost:3000/logout'>Sign out</a>
+      </article>
+    </section>
+*/
+
+@import url('default.css');
+
+.full-page{
+    font-size: larger;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    gap: 1rem;
+}
+
+.title{
+    margin-bottom: 2rem;
+}
+
+.setting-box{
+    width: 50rem;
+    height: 5rem;
+    border-radius: var(--border-radius);
+    padding: 0rem 2rem;
+
+    background:#101624;
+    border:1px solid rgba(255,255,255,.05);
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.sign-out-txt{
+    color: rgb(148, 61, 61);
+    font-weight: bold;
+}

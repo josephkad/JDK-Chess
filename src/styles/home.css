@@ -1,0 +1,151 @@
+@import url('./default.css');
+
+.full-page{
+  margin-left: 17rem;
+  padding: 5rem 5rem;
+}
+
+.htop{
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.side-boxes{
+    display: flex;
+    gap: 1rem;
+}
+
+.streak-box{
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.streak-box{
+    background-color: var(--accent2);
+    width: 15rem;
+    height: 15rem;
+    color: black;
+}
+
+.streak-box aside{
+  color: brown;
+}
+
+.larger-txt{
+  font-size: larger;
+  font-weight: bold;
+}
+
+.goal-box{
+    background-color: var(--primary2);
+    width: 40rem;
+    border-radius: var(--border-radius);
+    display: flex;
+    justify-content: space-between;
+    padding: 0rem 2rem;
+    align-items: center;
+}
+
+.no-column{
+    display: flex;
+    align-items: center;
+}
+
+.very-large-txt{
+    font-size: 3rem;
+    font-weight: bold;
+}
+
+.goal-box aside{
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  color: white;
+}
+
+progress{
+  accent-color: black;
+  width: 20rem;
+  height: 1.2rem;
+}
+
+.hmiddle{
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.openingBox{
+  display: flex;
+  padding: 1.5rem 1rem;
+  gap: 1rem;
+  background-color: rgb(39, 22, 59);
+  border-radius: var(--border-radius);
+  height: 7rem;
+  color: white;
+}
+
+.openingBox .box-start{
+  background-color: rgb(45, 181, 88);
+  width: 4rem;
+  height: 4rem;
+  border-radius: var(--border-radius);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.openingBox progress{
+  width: 15rem;
+  accent-color: rgb(100, 17, 100);
+  margin-top: 1rem;
+  height: 0.8rem;
+}
+
+.hbottom progress{
+  margin-top: 0;
+}
+
+.openingBox p{
+  color: grey;
+}
+
+.openingBox .box-middle{
+  margin-left: 5rem;
+  margin-top: 1.5rem;
+}
+
+.box-right{
+  display: flex;
+  flex-direction: column;
+  margin-left: auto;
+  margin-right: 0.8rem;
+  align-items: end;
+  gap: 1.4rem;
+  height: 5rem;
+}
+
+.box-right a{
+  background-color: purple;
+  padding: 0.3rem 0.5rem;
+  border-radius: var(--border-radius);
+}
+
+.hbottom{
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.hbottom .box-middle{
+  margin-left: 18rem;
+  margin-top: 0rem;
+}

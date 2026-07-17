@@ -1,0 +1,410 @@
+@import url('default.css');
+:root{
+    --green: #65E57B;
+    --red: #FF6B6B;
+    --blue: #8FB5FF;
+}
+
+.style-btn{
+    width: 8rem;
+    height: 4rem;
+    border:1px solid rgba(80, 118, 255, 0.2);
+    color: rgb(172, 95, 255);
+    border-radius: var(--border-radius);
+    background: transparent;
+    font-size: large;
+    transition: 0.2s ease;
+}
+
+.style-btn:hover{
+    background-color: var(--btn);
+    cursor: pointer;
+    color: white;
+}
+
+select:hover{
+    cursor: pointer;
+}
+
+select{
+    width: 8rem;
+    height: 4rem;
+    border:1px solid rgba(80, 118, 255, 0.2);
+    color: rgb(172, 95, 255);
+    border-radius: var(--border-radius);
+    background: transparent;
+    font-size: large;
+    transition: 0.2s ease;
+    padding: 1rem 1rem;
+}
+
+select option{
+    background: var(--bg-main);
+}
+
+.anaylze-card{
+    display: flex;
+    gap: 1rem;
+}
+
+.anaylze-card input{
+    border-radius: var(--border-radius);
+    background-color: transparent;
+    color: rgba(124, 152, 255, 0.702);
+    width: 15rem;
+    padding: 1rem;
+    border:1px solid var(--btn-border);
+    font-size: large;
+}
+
+.anaylze-card input::placeholder{
+    color: rgba(124, 152, 255, 0.702);;
+    font-size: large;
+}
+
+.anaylze-card input:focus{
+    outline: 3px solid var(--btn-border);
+}
+
+.games-section{
+    display: flex;
+    gap: 1.4rem;
+    margin-top: 1rem;
+}
+
+.stats-box{
+    width: 30rem;
+    height: 12rem;
+    border-radius: var(--border-radius);
+    padding: 2rem 2rem;
+
+    background:#101624;
+    border:1px solid rgba(255,255,255,.05);
+
+    display: flex;
+    justify-content: flex-start;
+    gap: 1.5rem;
+}
+
+.icon-box{
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.5rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Specific boxes*/
+.stats-box.g .icon-box{
+    background-color: #25503b;
+}
+
+.stats-box.g{
+    background-color: #13281E;
+}
+
+.stats-box.g .stat-num{
+    color: #65E57B;
+}
+
+.stats-box.g .stat-percentage{
+    color: #67be76;
+}
+
+
+
+.stats-box.r .icon-box{
+    background-color: #5a3043;
+}
+
+.stats-box.r{
+    background-color: #2A1820;
+}
+
+.stats-box.r .stat-num{
+    color: #FF6B6B;
+}
+
+.stats-box.r .stat-percentage{
+    color: #bc5151;
+}
+
+
+
+.stats-box.b .icon-box{
+    background-color: #253d68;
+}
+
+.stats-box.b{
+    background-color: #16243E;
+}
+
+.stats-box.b .stat-num{
+    color: #8FB5FF;
+}
+
+.stats-box.b .stat-percentage{
+    color: #5e7cb8;
+}
+
+
+/**/
+
+.stats-game-box{
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.stat-num{
+    font-size: xx-large;
+    font-weight: bold;
+}
+
+.stat-box{
+    width: 30rem;
+    min-height: 1rem;
+    border-radius: var(--border-radius);
+    padding: 2rem 2rem;
+
+    background:#101624;
+    border:1px solid rgba(255,255,255,.05);
+
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    color: grey;
+
+    font-size: medium;
+}
+
+.stat-box.b .stat-box-top, .stat-box.b .opening-stat-box{
+    justify-content: space-between;
+}
+
+.opening-stat-box{
+    height: auto;
+}
+
+.stat-title{
+    font-size: larger;
+    font-weight: bold;
+    color: white;
+}
+
+.stat-box-top{
+    display: flex;
+    gap: 1rem;
+}
+
+.opening-stat-middle{
+    margin-left: auto;
+}
+.opening-stat-box{
+    display: flex;
+}
+
+.opening-stat-box progress{
+    width: 5rem;
+    height: 0.8rem;
+}
+
+.opening-stat-box-middle{
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    margin-right: 3rem;
+    gap: 1rem;
+}
+
+progress.g{
+    accent-color: #65E57B;
+}
+
+.opening-stats{
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: white;
+}
+
+.bar{
+    height:0.3rem;
+    width: 5rem;
+    background:#17223b;
+    border-radius:5px;
+}
+
+
+.bar i{
+    display:block;
+    height:100%;
+    width:56%;
+    border-radius:5px;
+}
+
+.stat-box.g .bar i{
+    background:var(--green);
+}
+
+.stat-box.r .bar i{
+    background:var(--red);
+}
+
+.stat-box.b .bar i{
+    background:var(--blue);
+}
+
+.stat-box.g .opening-stat-box-middle{
+    color:var(--green);
+}
+
+.stat-box.r .opening-stat-box-middle{
+    color:var(--red);
+}
+
+.stat-box.b .opening-stat-box-middle{
+    color:var(--blue);
+}
+
+.stat-title{
+    display:flex;
+    gap:0.6rem;
+    align-items: center;
+}
+
+.stat-title span{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background: grey;
+}
+
+.stat-box.g .stat-title span{
+    background:var(--green);
+}
+
+.stat-box.r .stat-title span{
+    background: var(--red);
+}
+
+.stat-box.b .stat-title span{
+    background: var(--blue);
+}
+
+.openings-section{
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-box.personal{
+    width: 62rem;
+    height: 18rem;
+    display: flex;
+    gap: 1.5rem;
+}
+
+.personal-stats{
+    display: flex;
+    gap: 1rem;
+}
+
+.p-stat{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0rem 1.5rem;
+    width: 28rem;
+    height: 3rem;
+    border-radius: var(--border-radius);
+
+    background:#101624;
+    border:1px solid rgba(255,255,255,.05);
+    gap: 2rem;
+    color: grey;
+}
+
+.p-stat p{
+    margin-right: auto;
+}
+
+.p-stat strong{
+    color: white;
+}
+
+.p-left, .p-right{
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.purple{
+    color: rgb(168, 79, 223);
+    font-weight: bold;
+}
+
+.active-class {
+    box-shadow: 0 0 0.5rem var(--blue);
+    width: 10rem;
+}
+
+.spinner {
+    --size: 8rem;
+    width: var(--size);
+    height: var(--size);
+    border: 0.3rem solid var(--blue);
+    border-top: 0.6rem solid rgb(168, 79, 223);
+    border-radius: 50%;
+    animation: spin 0.5s linear infinite, fadeIn 1.2s ease;
+}
+
+.spin-center{
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spin-center.v{
+    height: 100vh;
+}
+
+.allStats{
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    animation: fadeInWTranslate 1.2s ease;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInWTranslate {
+    from {
+        transform: translateY(1rem);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0rem);
+        opacity: 1;
+    }
+}

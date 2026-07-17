@@ -1,0 +1,312 @@
+import dotenv from 'dotenv';
+dotenv.config(); // Read .env files
+
+import express from 'express';
+import User from './src/client/User.ts';
+import passport from 'passport';
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+
+import mongoose from 'mongoose';
+await mongoose.connect(process.env.MONGO_URI!);
+
+import cors from 'cors';
+import session from 'express-session';
+import { json } from 'stream/consumers';
+
+const loggedOutURL = 'http://localhost:5173';
+const loggedInURL = loggedOutURL + '/dashboard';
+const app = express();
+const testing = true;
+
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.CLIENT_ID!, //! to remove red lines, it tells typescript that this isnt undefined
+      clientSecret: process.env.CLIENT_SECRET!,
+      callbackURL: "http://localhost:3000/auth/google/callback",
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      let user = await User.findOne({googleId: profile.id});
+
+      if (!user) {
+        user = await User.create({
+          email: profile.emails?.[0].value,
+          googleId: profile.id,
+          displayName: profile.displayName,
+          photo: profile.photos?.[0].value,
+        });
+      }
+
+      done(null, user)
+    }
+  )
+);
+
+app.use(cors({
+    origin: loggedOutURL,
+    credentials: true
+}));
+
+app.use(express.json());
+app.use(session({secret: process.env.SESSION_SECRET!, resave: false, saveUninitialized: false}))
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser((user : any, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id : string, done) => {
+  const user = await User.findById(id);
+  done(null, user);
+});
+
+app.get("/auth/google",
+    passport.authenticate("google", {
+        scope: ["profile", "email"],
+        prompt: 'select_account',
+    })
+);
+
+app.get('/auth/google/callback', passport.authenticate('google', {
+  failureRedirect: loggedOutURL
+}),
+(req, res) => {
+  res.redirect(loggedInURL);
+});
+
+app.get('/api/user', (req, res)=>{
+    if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    };
+    res.json(req.user);
+});
+
+app.get('/logout', (req, res, next)=>{
+    req.logout((err) =>{
+        if (err) return next (err);
+
+        req.session.destroy(() =>{
+            res.clearCookie('connect.sid')
+            res.redirect(loggedOutURL);
+        });
+    })
+})
+
+// {Posts}
+
+// Functions
+interface statsObject{
+  action: number;
+  games: number;
+  percent?: number;
+}
+
+async function getGames(username : string, months : number) {
+  const archivesRes = await fetch(
+    `https://api.chess.com/pub/player/${username}/games/archives`
+  );
+
+  const archives = await archivesRes.json();
+  if (archives.code == 0) {return null}
+  const recentArchives = archives.archives.slice(-months);
+
+  let allGames: any[] = [];
+
+  for (const archive of recentArchives) {
+    const gameRes = await fetch(archive);
+    const data = await gameRes.json();
+    allGames.push(...data.games);
+  }
+
+  return allGames;
+}
+
+function getOpeningName(ecoUrl: string) {
+  if (ecoUrl == undefined) {return 'Undefined'}
+  const name = ecoUrl.split('/openings/')[1].replaceAll('-', ' ');
+  return name.split(' ').slice(0, 2).join(' ');
+}
+
+function increaseObjectOpening(object : Record<string, statsObject>, openingName : string, justGames? : boolean) {
+  if (object[openingName]) {
+    if (justGames) {
+      object[openingName].games += 1
+    } else {
+      object[openingName].action += 1
+      object[openingName].games += 1
+    }
+  } else if (!justGames) {
+    object[openingName] = {action: 1, games: 1}
+  }
+}
+
+function getStats(games : Array<any>, chessName : string, timeClass : string) {
+  if (!games) {return null};
+  const winResults = ['win'];
+  const loseResults = ['lose', 'checkmated', 'timeout', 'resigned', 'abandoned']
+  const drawResults = ['agreed', 'repetition', 'stalemate', 'insufficient', '50move', 'timevsinsufficient'];
+
+  let opponent_ratings = [] as number[];
+  let currentStreak = 0;
+
+  let openings_won_with: Record<string, statsObject> = {}
+  let openings_lost_to: Record<string, statsObject> = {}
+  let openings_faced: Record<string, statsObject> = {}
+
+  let stats = {
+    games_won: 0,
+    games_lost: 0,
+    games_draw: 0,
+
+    openings_won_with: {},
+    openings_lost_to: {},
+    openings_faced: {},
+    all_games_lost: [] as any,
+
+    total_games: 0,
+    win_rate: 0,
+    best_streak: 0,
+    average_opponent_rating: 0,
+    highest_rating: 0,
+
+    loss_rate: 0,
+    draw_rate: 0,
+  }
+
+  function endStreak() {
+    if (currentStreak > 0) {
+      if (currentStreak > stats.best_streak) {
+        stats.best_streak = currentStreak;
+      }
+
+      currentStreak = 0;
+    }
+  }
+
+  games.forEach((item, _) => {
+    if (item.time_class != timeClass) {return};
+    const gameFilter = item.white.username == chessName? item.white : item.black;
+    const opponent = item.white.username == chessName? item.black : item.white;
+    const openingName = getOpeningName(item.eco);
+    if (openingName == 'Undefined') {return}
+    
+    // games_won
+    if (winResults.includes(gameFilter.result)) {
+      stats.games_won += 1;
+      currentStreak += 1;
+
+      //openings_won_with
+      increaseObjectOpening(openings_won_with, openingName);
+    } else {
+      increaseObjectOpening(openings_won_with, openingName, true);
+    }
+
+    //games_lost
+    if (loseResults.includes(gameFilter.result)) {
+      stats.games_lost += 1;
+      stats.all_games_lost.push(item)
+
+      // best streak
+      endStreak()
+
+      //openings_lost_to
+      increaseObjectOpening(openings_lost_to, openingName)
+    } else {
+      increaseObjectOpening(openings_lost_to, openingName, true)
+    }
+
+    //games_draw
+    if (drawResults.includes(gameFilter.result)) {
+      stats.games_draw += 1;
+
+      // best streak
+      endStreak()
+    }
+
+    //openings_faced
+    increaseObjectOpening(openings_faced, openingName)
+
+    //total_games
+    stats.total_games += 1
+
+    //average_opponent_rating
+    opponent_ratings.push(opponent.rating)
+    
+    //highest_rating
+    if (gameFilter.rating > stats.highest_rating) {
+      stats.highest_rating = gameFilter.rating;
+    }
+  });
+
+  endStreak()
+
+  let sum = 0
+
+  for (let num of opponent_ratings) {
+    sum += num;
+  }
+
+  stats.average_opponent_rating = Math.round(sum / opponent_ratings.length)
+  stats.win_rate = Number(((stats.games_won / stats.total_games) * 100).toFixed(1))
+  
+  function editStats(object : Record<string, statsObject>) {
+    for (const item in object) {
+      const percent = Number(((object[item].action / object[item].games) * 100).toFixed(1))
+      object[item].percent = percent
+    }
+  };
+
+  editStats(openings_won_with);
+  editStats(openings_lost_to);
+
+  const wonWith = Object.entries(openings_won_with).sort((a, b) => b[1].action - a[1].action);
+  const lostTo = Object.entries(openings_lost_to).sort((a, b) => b[1].action - a[1].action);
+  const faced = Object.entries(openings_faced).sort((a, b) => b[1].action - a[1].action);
+  stats.openings_won_with = wonWith;
+  stats.openings_lost_to = lostTo;
+  stats.openings_faced = faced;
+
+  stats.loss_rate = Number(((stats.games_lost / stats.total_games) * 100).toFixed(1));
+  stats.draw_rate = Number(((stats.games_draw / stats.total_games) * 100).toFixed(1));
+  return stats;
+}
+
+// Content
+app.post('/api/saveStats', async (req, res) => {
+  const username = req.body.username;
+  const timeClass = req.body.timeClass;
+  let months = req.body.months;
+
+  if (months < 1 || months  > 12) {
+    months = 4;
+  };
+
+  try{
+    const games : any = await getGames(username, months);
+    if (games == null) {return res.json({ success: false });}
+    const stats = getStats(games, username, timeClass);
+    const userId = (req.user as any)?.id;
+
+    if (!userId) {
+      return res.status(401).json({error: 'Not logged in'});
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, {
+      stats: stats,
+      chessUsername: username,
+    },{returnDocument : 'after'});
+    console.log(stats)
+    return res.json(updatedUser);
+  } catch (err){
+    console.log(err);
+    return res.status(500).json({ success: false });
+  }
+})
+//JnxZ_u
+app.post('/auth/register', async (req, res) => {console.log('made it')})
+
+// Listen
+app.listen(3000, () => {
+    console.log('server running');
+});

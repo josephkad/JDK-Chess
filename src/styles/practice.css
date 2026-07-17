@@ -1,0 +1,126 @@
+/*
+<section className='full-page p'>
+      <div className='left-panel'>
+        <h2>Game</h2>
+        
+        <section id='moves'>
+          <article className='move-parent'>
+            <p>1.</p>
+
+            <article className='moves-inside'>
+              <p className='first-move'>e4</p>
+              <p className='second-move'>c5</p>
+            </article>
+          </article>
+        </section>
+      </div>
+    </section>
+*/
+
+.full-page.p{
+    margin-left: 20rem;
+    display: flex;
+    flex-direction: row;
+    animation: fadeInWTranslate 0.2s ease;
+}
+
+.left-panel{
+    width: 20rem;
+    max-height: 50rem;
+    border-radius: var(--border-radius);
+    padding: 2rem 2rem;
+
+    background:#101624;
+    border:1px solid rgba(255,255,255,.05);
+
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+#moves::-webkit-scrollbar {
+    width: 8px;
+}
+
+#moves::-webkit-scrollbar-track {
+    background: #1c2433;
+}
+
+#moves::-webkit-scrollbar-thumb {
+    background: #4b5b73;
+    border-radius: 8px;
+}
+
+#moves::-webkit-scrollbar-thumb:hover {
+    background: #667a98;
+}
+
+#moves{
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    max-height: 50rem;
+    min-height: 35rem;
+    gap: 1rem;
+}
+
+.move-parent, .moves-inside{
+    display: flex;
+    flex-direction: row;
+}
+
+.move-parent{
+    border-bottom:1px solid rgba(255,255,255,.05);
+    height: 2rem;
+    border-radius: 0.3rem;
+}
+
+.move-parent, .moves-inside{
+    animation: fadeInWTranslate 0.3s ease;
+}
+
+.moves-inside{
+    width: 100%;
+    justify-content: space-between;
+    margin-left: 1rem;
+    margin-right: 4rem;
+    padding: 0rem 1rem;
+}
+
+.chess-container{
+    --size: 50rem;
+    width: var(--size);
+    height: var(--size);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.game-move{
+    all: unset;
+}
+
+.game-move:hover{
+    cursor: pointer;
+    user-select: none;
+}
+
+.bottom-buttons{
+    display: flex;
+    gap: 1rem;
+}
+
+.bottom-buttons button{
+    width: 3rem;
+    height: 3rem;
+}
+
+@keyframes fadeInWTranslate {
+    from {
+        transform: translateY(1rem);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0rem);
+        opacity: 1;
+    }
+}
