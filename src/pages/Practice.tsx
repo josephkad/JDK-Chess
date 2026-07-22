@@ -10,10 +10,12 @@ import checkSound from '../sounds/move-check.mp3'
 import checkmateSound from '../sounds/game-end.mp3'
 import promoteSound from '../sounds/promote.mp3'
 import { useUserVar } from '../userVar';
+import { ChartNoAxesColumnIncreasing, Check, ChessBishop, Clock, Flag, Lightbulb, Puzzle, RotateCcw, Shield, ShieldCheck, Spotlight } from 'lucide-react';
+import {CircularProgress} from '../components/circular'
 
 type moveHistory = {
   [key: number] : {
-    w: string;
+    w: string | null;
     b: string | null;
   };
 };
@@ -27,6 +29,17 @@ type redS = {
   [key : string] : {
     backgroundColor: string,
   } | null
+}
+
+const g_vars = {
+  maxPosition: 10,
+  minMoves: 2,
+}
+
+const survivalHistoryTemp : number[] = []
+
+for (let v = 1; v <= g_vars.maxPosition; v++) {
+  survivalHistoryTemp.push(v)
 }
 
 function PracticePage() {
@@ -46,6 +59,7 @@ function PracticePage() {
   const moveRef = useRef(movePiece)
   const {user, _} = useUserVar();
   const userStats : any = useState(user?.stats? user.stats[0] : null);
+  const didStartGame = useRef(false);
 
   // States
   const [game, setGame] = useState(new Chess());
@@ -58,7 +72,17 @@ function PracticePage() {
   const [redSquares, setRedSquare] = useState<redS>({});
   const [engineTurn, setEngineTurn] = useState(false);
   const [bordOrientation, setBoardOrientation] = useState<'white' | 'black'>('white');
-  const [evalSquare, setEvalSquare] = useState({});
+  const [startedGame, setStartedGame] = useState(false);
+
+  const [g_currentPosition, g_setCurrentPosition] = useState(0);
+  const [g_currentMoveSurvived, g_setCurrentMoveSurvived] = useState(0);
+  const [g_variation, g_setVariation] = useState('King\'s Indian Defense: ... Variation');
+  const [g_info, g_setInfo] = useState('This position is from a game you lost on May 12, 2025...');
+  const [g_timeSaved, g_setTimeSaved] = useState('00:00');
+  const [g_OriginalTimeSaved, g_setOriginalTimeSaved] = useState(0);
+  const [g_survival, g_setSurvival] = useState({});
+  const [g_currentColor, g_setCurrentColor] = useState('---');
+
 
   //  Functions
   function playSound(sound : any) {
@@ -98,10 +122,7 @@ function PracticePage() {
     }
     const gameCopy = new Chess(gameRef.current.fen()) //new Chess(game.fen());
     let move;
-    let beforeEval;
-    let afterEval;
     let wasWhite = false;
-    const beforeFen = gameRef.current.fen()
 
     try {
         move = gameCopy.move({
@@ -149,62 +170,26 @@ function PracticePage() {
         white: white
       })
 
+      if (!engineTurn) {
+        g_setCurrentMoveSurvived(g_currentMoveSurvived - 1)
+      }
+
       const checkmate = gameCopy.isCheckmate();
       const check = gameCopy.isCheck();
       const promotion = move.promotion == 'q';
       const captured = move.captured;
       const castled = move.flags == 'k' || move.flags == 'q';
-
+      
       decideAudio(checkmate, check, promotion, captured, castled);
       setEngineTurn(!fromEngine? true : false)
       wasWhite = white;
     }
 
-    const afterFen = gameCopy.fen()
-    
-    
     setGame(gameCopy);
     gameRef.current = gameCopy;
     setOptionSquares({});
-
-
-    if (!engineTurn) {
-      async function scoreMoves() {        
-        beforeEval = await evaluatePosition(beforeFen);
-        afterEval = await evaluatePosition(afterFen);
-        const evalLoss = Math.max(
-            0,
-            getEvalLoss(beforeEval, afterEval)
-        );
-
-        if (lastMove) {
-          setEvalSquare({
-            [lastMove.to]: {
-              background: "rgba(0,255,0,.3)",
-              backgroundImage: "url('/icons/brilliant.svg')",
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "top right",
-              backgroundSize: "25%"
-            }
-          });
-        }
-        console.log({
-          beforeEval,
-          afterEval,
-          wasWhite,
-          evalLoss,
-          classification: classifyMove(evalLoss)
-        });
-      }
-
-      scoreMoves()
-    }
-
+    
     return true;
-  }
-
-  function getEvalLoss(before:number, after:number){
-    return Math.max(0, before - after);
   }
   
   function showDots({square} : PieceHandlerArgs) {
@@ -441,7 +426,7 @@ function PracticePage() {
     let chosen = null;
     
     for (const lost_g of  userStats[0].all_games_lost) {
-      if (chosen == null || Math.floor(Math.random() * 4) == 2) {
+      if (chosen == null || Math.floor(Math.random() * 15) == 10) {
         const loadedGame = new Chess()
         loadedGame.loadPgn(lost_g.pgn)
         const loadedGameHistoryLength = loadedGame.history().length
@@ -515,6 +500,213 @@ function PracticePage() {
         return "Mistake";
 
     return "Blunder";
+  }
+
+  function getSurvivalActive(item : number){
+    let classN = 'survival-history '
+
+    if (item == g_currentPosition) {
+      classN += 'surv-on'
+    }
+
+    if (item > g_currentPosition) {
+      classN += 'surv-inactive'
+    }
+
+    if (item < g_currentPosition) {
+      classN += 'surv-active'
+    }
+    
+    return classN;
+  }
+
+  function defaultStartGame() {
+    const randomGame : any = getRandomGame()
+    const colorPlaying = randomGame.black.result == 'win' ? 'white' : 'black';
+    const computerColor = colorPlaying == 'white'? 'black' : 'white';
+    const newGame = new Chess()
+
+    newGame.loadPgn(randomGame.pgn)
+    g_setCurrentMoveSurvived(g_vars.minMoves)
+    g_setCurrentColor(computerColor);
+
+    const newGameHistory = newGame.history()
+    const skipping = Math.round(newGameHistory.length * 0.2)
+    let moveNum = 0
+    let chosenStart = null
+
+    let tempHistory : moveHistory = {}
+    let tempPreview : movePreview | null = null
+    let lastWhite = false
+
+    for (const moveMade of newGameHistory) {
+      const newLength = Object.keys(tempHistory).length + 1
+      let white = true
+
+      if (tempHistory[newLength - 1] && tempHistory[newLength - 1].b == null) {
+        tempHistory[newLength - 1] = {
+          w: tempHistory[newLength - 1].w,
+          b: moveMade
+        }
+
+        white = false
+      } else {
+        tempHistory[newLength] = {
+          w: moveMade,
+          b: null
+        }
+      }
+
+      lastWhite = white
+      moveNum++;
+      if (moveNum <= skipping) continue;
+      
+      if (chosenStart == null || Math.floor(Math.random() * 20) == 10) {
+        chosenStart = moveNum;
+
+        tempPreview = {
+          index: white ? newLength : newLength - 1,
+          white: white
+        }
+      }
+    }
+    
+    if (!chosenStart) return
+    let loopedThrough = 0
+    let newTempHistory : moveHistory = {}
+    let newTempPreview : movePreview | null = null
+    let stopped = false;
+    
+    const newBoard = new Chess()
+    console.log(colorPlaying)
+    for (const [key, value] of Object.entries(tempHistory)) {
+      if (stopped) break;
+      for (const moveValue of Object.entries(value)) {
+        loopedThrough++;
+        const newLength = Object.keys(newTempHistory).length + 1
+        const player_is_black_and_stopped_at_black = colorPlaying == 'black' && !newTempHistory[newLength - 1]?.b
+        const player_is_white_and_stopped_at_white = colorPlaying == 'white' && newTempHistory[newLength - 1]?.b
+        let validStopLength = player_is_white_and_stopped_at_white || player_is_black_and_stopped_at_black;
+
+        if (((loopedThrough > 5 && (Math.floor(Math.random() * 10)) == 5) || loopedThrough > chosenStart) && validStopLength) {
+          stopped = true;
+          break;
+        } else {
+          const moveMade = moveValue[0] == 'w' ? value.w : value.b
+          if (!moveMade) continue;
+
+          let white = true
+          const m = newBoard.move(moveMade)
+          setLastMove({from: m.from, to: m.to})
+
+          if (newTempHistory[newLength - 1] && newTempHistory[newLength - 1].b == null) {
+            newTempHistory[newLength - 1] = {
+              w: newTempHistory[newLength - 1].w,
+              b: moveMade
+            }
+
+            white = false
+          } else {
+            newTempHistory[newLength] = {
+              w: moveMade,
+              b: null
+            }
+          }
+
+          newTempPreview = {
+            index: white ? newLength : newLength - 1,
+            white: white
+          }
+        }
+      }
+    }
+
+    /*for (const [key, value] of Object.entries(tempHistory)) {
+      for (const moveValue of Object.entries(value)) {
+        loopedThrough++;
+        
+        if (loopedThrough > chosenStart) {
+          if (moveValue[0] == 'b') {
+            if (!tempHistory[Number(key)]) continue
+            tempHistory[Number(key)].b = null
+          } else {
+            delete tempHistory[Number(key)]
+          }
+        } else {
+          const newLength = Object.keys(newTempHistory).length + 1
+          const moveMade = moveValue[0] == 'w' ? value.w : value.b
+          if (!moveMade) continue;
+
+          let white = true
+          const m = newBoard.move(moveMade)
+          setLastMove({from: m.from, to: m.to})
+
+          if (newTempHistory[newLength - 1] && newTempHistory[newLength - 1].b == null) {
+            newTempHistory[newLength - 1] = {
+              w: newTempHistory[newLength - 1].w,
+              b: moveMade
+            }
+
+            white = false
+          } else {
+            newTempHistory[newLength] = {
+              w: moveMade,
+              b: null
+            }
+          }
+
+          newTempPreview = {
+            index: white ? newLength : newLength - 1,
+            white: white
+          }
+        }
+      }
+    }*/
+    
+    /*console.log(newTempHistory, newTempPreview)
+    const isBlackCurrently = !newTempPreview?.white && colorPlaying == 'black';
+    const isWhiteCurrently = newTempPreview?.white && colorPlaying == 'white';
+
+    if ((isWhiteCurrently) || (isBlackCurrently)) {
+      console.log('WRONG!!')
+      const currLength = Object.keys(newTempHistory).length;
+      const white = isWhiteCurrently? true : false;
+      console.log(isWhiteCurrently, isBlackCurrently)
+      if (isWhiteCurrently) {
+        newTempHistory[currLength].b = null;
+
+        newTempPreview = {
+          index: currLength,
+          white: white
+        }
+      }
+
+      if (isBlackCurrently) {
+        delete newTempHistory[currLength]
+        
+        newTempPreview = {
+          index: currLength - 1,
+          white: white
+        }
+      }
+    }*/
+
+    setGame(newBoard)
+    gameRef.current = newBoard
+
+    setBoardOrientation(colorPlaying)
+    setHistory(newTempHistory)
+    setPreview(newTempPreview)
+    setEngineTurn(false)
+    setOptionSquares({})
+  }
+
+  function initialStartGame() {
+    if (!startedGame) {
+      setStartedGame(true);
+      defaultStartGame();
+      didStartGame.current = true;
+    }
   }
 
   useEffect(() => {
@@ -619,187 +811,233 @@ function PracticePage() {
   }, [engineTurn, game])
 
   useEffect(() => {
-    const randomGame : any = getRandomGame()
-    const colorPlaying = randomGame.black.result == 'win' ? 'white' : 'black';
-    const newGame = new Chess()
-    newGame.loadPgn(randomGame.pgn)
+    const timer = setInterval(() => {
+      if (didStartGame.current) {
+        const timeSaved = g_OriginalTimeSaved + 1;
+        let string = ''
+        let minutesString = ''
+        let secondsString = ''
+        let seconds = timeSaved
+        let minutes = 0;
+        g_setOriginalTimeSaved(g_OriginalTimeSaved + 1);
 
-    const newGameHistory = newGame.history()
-    const skipping = Math.round(newGameHistory.length * 0.2)
-    let moveNum = 0
-    let chosenStart = null
-
-    let tempHistory : moveHistory = {}
-    let tempPreview : movePreview | null = null
-    let lastWhite = false
-
-    for (const moveMade of newGameHistory) {
-      const newLength = Object.keys(tempHistory).length + 1
-      let white = true
-
-      if (tempHistory[newLength - 1] && tempHistory[newLength - 1].b == null) {
-        tempHistory[newLength - 1] = {
-          w: tempHistory[newLength - 1].w,
-          b: moveMade
+        for (let i = seconds; i > 59; i -= 60) {
+          minutes++;
+          seconds -= 60;
         }
 
-        white = false
-      } else {
-        tempHistory[newLength] = {
-          w: moveMade,
-          b: null
+        minutesString = '0' + String(minutes)
+
+        if (minutes > 9) {
+          minutesString = String(minutes)
         }
+
+        secondsString = '0' + seconds
+
+        if (seconds > 9) {
+          secondsString = String(seconds)
+        }
+
+        string = minutesString + ':' + secondsString
+        g_setTimeSaved(string);
       }
+    }, 1000)
 
-      lastWhite = white
-      moveNum++;
-      if (moveNum <= skipping) continue;
-      
-      if (chosenStart == null || Math.floor(Math.random() * 20) == 10) {
-        chosenStart = moveNum;
-
-        tempPreview = {
-          index: white ? newLength : newLength - 1,
-          white: white
-        }
-      }
-    }
-    
-    if (!chosenStart) return
-    let loopedThrough = 0
-    let newTempHistory : moveHistory = {}
-    let newTempPreview : movePreview | null = null
-    
-    const newBoard = new Chess()
-
-    for (const [key, value] of Object.entries(tempHistory)) {
-      for (const moveValue of Object.entries(value)) {
-        loopedThrough++;
-        
-        if (loopedThrough > chosenStart) {
-          if (moveValue[0] == 'b') {
-            if (!tempHistory[Number(key)]) continue
-            tempHistory[Number(key)].b = null
-          } else {
-            delete tempHistory[Number(key)]
-          }
-        } else {
-          const newLength = Object.keys(newTempHistory).length + 1
-          const moveMade = moveValue[0] == 'w' ? value.w : value.b
-          if (!moveMade) continue;
-
-          let white = true
-          const m = newBoard.move(moveMade)
-          setLastMove({from: m.from, to: m.to})
-
-          if (newTempHistory[newLength - 1] && newTempHistory[newLength - 1].b == null) {
-            newTempHistory[newLength - 1] = {
-              w: newTempHistory[newLength - 1].w,
-              b: moveMade
-            }
-
-            white = false
-          } else {
-            newTempHistory[newLength] = {
-              w: moveMade,
-              b: null
-            }
-          }
-
-          newTempPreview = {
-            index: white ? newLength : newLength - 1,
-            white: white
-          }
-        }
-      }
-    }
-
-    setGame(newBoard)
-    gameRef.current = newBoard
-
-    setBoardOrientation(colorPlaying)
-    setHistory(newTempHistory)
-    setPreview(newTempPreview)
-    setEngineTurn(false)
-    setOptionSquares({})
-  }, [])
+    return () => clearInterval(timer)
+  })
   
   // Html
   return (
     <>
     <section className='full-page p'>
-      <section className='chess-container'>
-        <Chessboard options={{
-          onPieceDrop: movePiece,
-          onPieceClick: showDots,
-          onPieceDrag: showDots,
-          onSquareClick: clickSquare,
-          onSquareRightClick: rightClickSquare,
 
-          position: getFen().fen,
-          allowDragOffBoard: false,
-          dragActivationDistance: 1.1,
-          boardOrientation: bordOrientation,
-          squareStyles: {
-            ...(lastMove && {
-              [lastMove.from]: {
-                backgroundColor: "rgba(255, 255, 51, 0.51)",
-              },
-              [lastMove.to]: {
-                backgroundColor: "rgb(255, 255, 51, 0.51)",
-              },
-            }),
-            ...optionSquares,
-            ...redSquares,
-            ...evalSquare
-          },
+    <section className='page-vert'>
+      <div className='page-start'>
+        <article className='dark-box'>
+          <div className='side-by'>
+            <Lightbulb/>
+            <p className='big-title'>About This Position</p>
+          </div>
 
-          draggingPieceGhostStyle: {
-            opacity: 0
-          },
+          <p className='grey-txt'>{g_variation}</p>
+          <p className='grey-txt'>{g_info}</p>
+        </article>
 
-          draggingPieceStyle: {
-            transform: "scale(1.05)"
-          },
+        <article className='dark-box'>
+          <div className='side-by'>
+            <ChartNoAxesColumnIncreasing />
+            <p className='big-title'>Progress</p>
+          </div>
 
-          dropSquareStyle: {
-            boxShadow: "inset 0 0 0 7px #ffffff",
-          },
+         <div className='side-by gap'>
+          <CircularProgress percentage={Math.round((g_currentPosition / g_vars.maxPosition) * 100)} size={100} color="#6366f1"/>
+          
+          <div className='down-by'>
+            <p className='grey-txt'>{g_currentPosition} / {g_vars.maxPosition}</p>
+            <p className='grey-txt'>Positions</p>
+          </div>
+         </div>
+        </article>
 
-          darkSquareStyle: {
-            backgroundColor: "#3B4758"
-          },
-          lightSquareStyle: {
-            backgroundColor: "#C7D2DA"
-          },
-        }}/>
-      </section>
+        <article className='dark-box small-box'>
+          <div className='side-by'>
+            <ShieldCheck />
+            <p className='big-title'>Survival History</p>
+          </div>
 
-      <div className='left-panel'>
-        <h2>Game</h2>
-        
-        <section id='moves' ref={historyRef}>
-          {history && (
-            Object.values(history).map((move, index) => (
-              <article className='move-parent' key={index}>
-                <p>{index}.</p>
+          <div className='side-by surv'>
+            {survivalHistoryTemp.map((item, index) => (
+              <p key={index} className={getSurvivalActive(item)}>{item < g_currentPosition ? <Check size={20}/> : item}</p>
+            ))}
+          </div>
+        </article>
 
-                <article className='moves-inside'>
-                  <button className='first-move game-move' onClick={()=>selectPreview(true, index + 1)}>{move.w}</button>
-                  <button className='second-move game-move' onClick={()=>selectPreview(false, index + 1)}>{move.b || ''}</button>
-                </article>
-              </article>
-            ))
-          )}
+        <article className='dark-box tips'>
+          <div className='side-by'>
+            <Spotlight/>
+            <p className='big-title'>Tips</p>
+          </div>
+
+          <div>
+            <p className='grey-txt'>The goal is to survive {g_vars.maxPosition} moves.</p>
+            <p className='grey-txt'>Focus on piece safety and king safety.</p>
+            <p className='grey-txt'>Good Luck!</p>
+          </div>
+        </article>
+      </div>
+
+      <div className='general-chess-area'>
+        <section className='mid-bar'>
+          <article >
+            <Puzzle size={35}/>
+
+            <div>
+              <p className='top-txt'>Position {g_currentPosition} / {g_vars.maxPosition}</p>
+              <p className='grey-txt'>From your lost games</p>
+            </div>
+          </article>
+
+          <article >
+            <Shield size={35}/>
+
+            <div>
+              <p className='top-txt'>Survive {g_currentMoveSurvived} more moves</p>
+              <p className='grey-txt'>Computer is {g_currentColor}</p>
+            </div>
+          </article>
+
+          <article >
+            <Clock size={35}/>
+
+            <div>
+              <p className='top-txt'>{g_timeSaved}</p>
+              <p className='grey-txt'>Time Survived</p>
+            </div>
+          </article>
         </section>
 
-        <div className='bottom-buttons'>
-          <button className='style-btn' onClick={previousMove}>{'<'}</button>
-          <button className='style-btn' onClick={nextMove}>{'>'}</button>
-          <button className='style-btn' onClick={startingPosition}>start</button>
-          <button className='style-btn' onClick={currentPosition}>end</button>
+        <article className='chess-holder'>
+          {startedGame ? (<section className='chess-container'>
+            <Chessboard options={{
+              onPieceDrop: movePiece,
+              onPieceClick: showDots,
+              onPieceDrag: showDots,
+              onSquareClick: clickSquare,
+              onSquareRightClick: rightClickSquare,
+
+              position: getFen().fen,
+              allowDragOffBoard: false,
+              dragActivationDistance: 1.1,
+              boardOrientation: bordOrientation,
+              squareStyles: {
+                ...(lastMove && {
+                  [lastMove.from]: {
+                    backgroundColor: "rgba(255, 255, 51, 0.51)",
+                  },
+                  [lastMove.to]: {
+                    backgroundColor: "rgb(255, 255, 51, 0.51)",
+                  },
+                }),
+                ...optionSquares,
+                ...redSquares,
+              },
+
+              draggingPieceGhostStyle: {
+                opacity: 0
+              },
+
+              draggingPieceStyle: {
+                transform: "scale(1.05)"
+              },
+
+              dropSquareStyle: {
+                boxShadow: "inset 0 0 0 7px #ffffff",
+              },
+
+              darkSquareStyle: {
+                backgroundColor: "#3B4758"
+              },
+              lightSquareStyle: {
+                backgroundColor: "#D0C7B8"
+              },
+            }}/>
+          </section>
+          ) : (
+            <>
+            <div className='start-game-section'>
+              <div className='side-by'>
+                <ChessBishop/>
+                <h2>Practice</h2>
+              </div>
+              <p className='grey-txt desc'>Survive {g_vars.maxPosition} moves from your previous lost positions, data is collected from your stats</p>
+              <button className='start-game-btn' onClick={initialStartGame}>Start</button>
+            </div>
+            </>
+            )}
+        </article>
+
+        <div className='bottom-btns-p'>
+          <button>
+            <Flag/>
+            <p>Skip</p>
+          </button>
+
+          <button>
+            <RotateCcw/>
+            <p>Restart Position</p>
+          </button>
         </div>
       </div>
+
+      <section className='page-horizontal'>
+          <div className='left-panel'>
+            <h2>Game</h2>
+            
+            <section id='moves' ref={historyRef}>
+              {history && (
+                Object.values(history).map((move, index) => (
+                  <article className='move-parent' key={index}>
+                    <p>{index}.</p>
+
+                    <article className='moves-inside'>
+                      <button className='first-move game-move' onClick={()=>selectPreview(true, index + 1)}>{move.w}</button>
+                      <button className='second-move game-move' onClick={()=>selectPreview(false, index + 1)}>{move.b || ''}</button>
+                    </article>
+                  </article>
+                ))
+              )}
+            </section>
+
+            <div className='bottom-buttons'>
+              <button className='style-btn' onClick={previousMove}>{'<'}</button>
+              <button className='style-btn' onClick={nextMove}>{'>'}</button>
+              <button className='style-btn' onClick={startingPosition}>start</button>
+              <button className='style-btn' onClick={currentPosition}>end</button>
+            </div>
+          </div>
+        </section>
+    </section>
+
     </section>
     </>
   )
