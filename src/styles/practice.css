@@ -225,6 +225,7 @@
 
 .dark-box.tips{
     font-size: 0.96rem;
+    height: auto;
 }
 
 .side-by{
@@ -257,6 +258,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: 0.3s ease;
 }
 
 .survival-history.surv-active{
@@ -287,6 +289,20 @@
     max-width: 20rem;
 }
 
+.smoothAnim{
+    animation: fadeInWTranslate 0.3s ease;
+}
+
+.dark-box.tips .bold-txt{
+    color: white;
+    font-style: italic;
+}
+
+.results-page{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
 @keyframes fadeInWTranslate {
     from {

@@ -1,6 +1,7 @@
 import React from 'react';
 
-export function CircularProgress({ 
+export function CircularProgress({
+  _class = '',
   percentage = 30, 
   size = 120, 
   strokeWidth = 8, 
@@ -14,7 +15,10 @@ export function CircularProgress({
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div 
+    <div
+
+    className={_class}
+
       style={{ 
         position: 'relative', 
         width: size, 

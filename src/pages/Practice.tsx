@@ -33,10 +33,11 @@ type redS = {
 
 const g_vars = {
   maxPosition: 10,
-  minMoves: 2,
+  minMoves: 5,
 }
 
 const survivalHistoryTemp : number[] = []
+const delay = (ms : number) => new Promise(resolve => setTimeout(resolve, ms))
 
 for (let v = 1; v <= g_vars.maxPosition; v++) {
   survivalHistoryTemp.push(v)
@@ -74,7 +75,7 @@ function PracticePage() {
   const [bordOrientation, setBoardOrientation] = useState<'white' | 'black'>('white');
   const [startedGame, setStartedGame] = useState(false);
 
-  const [g_currentPosition, g_setCurrentPosition] = useState(0);
+  const [g_currentPosition, g_setCurrentPosition] = useState(10);
   const [g_currentMoveSurvived, g_setCurrentMoveSurvived] = useState(0);
   const [g_variation, g_setVariation] = useState('King\'s Indian Defense: ... Variation');
   const [g_info, g_setInfo] = useState('This position is from a game you lost on May 12, 2025...');
@@ -82,6 +83,14 @@ function PracticePage() {
   const [g_OriginalTimeSaved, g_setOriginalTimeSaved] = useState(0);
   const [g_survival, g_setSurvival] = useState({});
   const [g_currentColor, g_setCurrentColor] = useState('---');
+
+  const [lastPlayedGame, setLastPlayedGame] = useState<any>(null);
+  const [lastPlayedLoopedThrough, setLastPlayedLoopedThrough] = useState(0);
+  const [canProceed, setCanProceed] = useState(true);
+  const [previewNum, setPreviewNum] = useState(1)
+  const [continueAfterEngine, setContinueAfterEngine] = useState(false);
+  const [movingOn, setMovingOn] = useState(false);
+  const [processEnded, setProcessEnded] = useState(false)
 
 
   //  Functions
@@ -117,7 +126,7 @@ function PracticePage() {
   }
   
   function movePiece({sourceSquare, targetSquare} : PieceDropHandlerArgs, fromEngine = false) {
-    if (!targetSquare || (engineTurn && !fromEngine) ) {
+    if ((!targetSquare || (engineTurn && !fromEngine)) || movingOn ) {
         return false;
     }
     const gameCopy = new Chess(gameRef.current.fen()) //new Chess(game.fen());
@@ -171,7 +180,12 @@ function PracticePage() {
       })
 
       if (!engineTurn) {
+        const newVal = g_currentMoveSurvived - 1
         g_setCurrentMoveSurvived(g_currentMoveSurvived - 1)
+
+        if (newVal == 0) {
+          setContinueAfterEngine(true)
+        }
       }
 
       const checkmate = gameCopy.isCheckmate();
@@ -181,14 +195,26 @@ function PracticePage() {
       const castled = move.flags == 'k' || move.flags == 'q';
       
       decideAudio(checkmate, check, promotion, captured, castled);
-      setEngineTurn(!fromEngine? true : false)
+
+      if (checkmate) {
+        setContinueAfterEngine(false);
+        setMovingOn(true);
+        setTimeout(() => {nextGamePosition(false);}, 250);
+      } else if (!continueAfterEngine) {
+        setEngineTurn(!fromEngine? true : false)
+      } else {
+        setContinueAfterEngine(false);
+        setTimeout(() => {nextGamePosition(false);}, 200);
+        setMovingOn(true);
+      }
+
       wasWhite = white;
     }
 
     setGame(gameCopy);
     gameRef.current = gameCopy;
     setOptionSquares({});
-    
+
     return true;
   }
   
@@ -520,13 +546,20 @@ function PracticePage() {
     return classN;
   }
 
-  function defaultStartGame() {
-    const randomGame : any = getRandomGame()
-    const colorPlaying = randomGame.black.result == 'win' ? 'white' : 'black';
+  function defaultStartGame(sent : boolean) {
+    const randomGame : any = sent? lastPlayedGame : getRandomGame()
+    const colorPlaying = randomGame?.black?.result == 'win' ? 'white' : 'black';
     const computerColor = colorPlaying == 'white'? 'black' : 'white';
     const newGame = new Chess()
 
+    const date = randomGame.pgn.split('Date ')[1].split('"')[1].split('.')
+    const month = new Date(date[1]).toLocaleString('en-US', {month: 'long'})
+    const variation = randomGame.eco.split('openings/')[1]
+    
     newGame.loadPgn(randomGame.pgn)
+    g_setVariation(variation)
+    g_setInfo(`This position is from a game you lost on ${month} ${Math.floor(Number(date[2]))}, ${date[0]}`)
+    setLastPlayedGame(randomGame)
     g_setCurrentMoveSurvived(g_vars.minMoves)
     g_setCurrentColor(computerColor);
 
@@ -578,7 +611,7 @@ function PracticePage() {
     let stopped = false;
     
     const newBoard = new Chess()
-    console.log(colorPlaying)
+
     for (const [key, value] of Object.entries(tempHistory)) {
       if (stopped) break;
       for (const moveValue of Object.entries(value)) {
@@ -587,8 +620,11 @@ function PracticePage() {
         const player_is_black_and_stopped_at_black = colorPlaying == 'black' && !newTempHistory[newLength - 1]?.b
         const player_is_white_and_stopped_at_white = colorPlaying == 'white' && newTempHistory[newLength - 1]?.b
         let validStopLength = player_is_white_and_stopped_at_white || player_is_black_and_stopped_at_black;
+        const restartingOldPosition = sent? loopedThrough == lastPlayedLoopedThrough : false
+        const regularStopReqs = sent? false : (((loopedThrough > 5 && (Math.floor(Math.random() * 10)) == 5) || loopedThrough > chosenStart) && validStopLength)
 
-        if (((loopedThrough > 5 && (Math.floor(Math.random() * 10)) == 5) || loopedThrough > chosenStart) && validStopLength) {
+        if (regularStopReqs || restartingOldPosition) {
+          setLastPlayedLoopedThrough(loopedThrough)
           stopped = true;
           break;
         } else {
@@ -621,76 +657,6 @@ function PracticePage() {
       }
     }
 
-    /*for (const [key, value] of Object.entries(tempHistory)) {
-      for (const moveValue of Object.entries(value)) {
-        loopedThrough++;
-        
-        if (loopedThrough > chosenStart) {
-          if (moveValue[0] == 'b') {
-            if (!tempHistory[Number(key)]) continue
-            tempHistory[Number(key)].b = null
-          } else {
-            delete tempHistory[Number(key)]
-          }
-        } else {
-          const newLength = Object.keys(newTempHistory).length + 1
-          const moveMade = moveValue[0] == 'w' ? value.w : value.b
-          if (!moveMade) continue;
-
-          let white = true
-          const m = newBoard.move(moveMade)
-          setLastMove({from: m.from, to: m.to})
-
-          if (newTempHistory[newLength - 1] && newTempHistory[newLength - 1].b == null) {
-            newTempHistory[newLength - 1] = {
-              w: newTempHistory[newLength - 1].w,
-              b: moveMade
-            }
-
-            white = false
-          } else {
-            newTempHistory[newLength] = {
-              w: moveMade,
-              b: null
-            }
-          }
-
-          newTempPreview = {
-            index: white ? newLength : newLength - 1,
-            white: white
-          }
-        }
-      }
-    }*/
-    
-    /*console.log(newTempHistory, newTempPreview)
-    const isBlackCurrently = !newTempPreview?.white && colorPlaying == 'black';
-    const isWhiteCurrently = newTempPreview?.white && colorPlaying == 'white';
-
-    if ((isWhiteCurrently) || (isBlackCurrently)) {
-      console.log('WRONG!!')
-      const currLength = Object.keys(newTempHistory).length;
-      const white = isWhiteCurrently? true : false;
-      console.log(isWhiteCurrently, isBlackCurrently)
-      if (isWhiteCurrently) {
-        newTempHistory[currLength].b = null;
-
-        newTempPreview = {
-          index: currLength,
-          white: white
-        }
-      }
-
-      if (isBlackCurrently) {
-        delete newTempHistory[currLength]
-        
-        newTempPreview = {
-          index: currLength - 1,
-          white: white
-        }
-      }
-    }*/
-
     setGame(newBoard)
     gameRef.current = newBoard
 
@@ -704,8 +670,37 @@ function PracticePage() {
   function initialStartGame() {
     if (!startedGame) {
       setStartedGame(true);
-      defaultStartGame();
+      defaultStartGame(false);
       didStartGame.current = true;
+    }
+  }
+
+  async function nextGamePosition(varr : any) {
+    if (processEnded) return;
+    setMovingOn(false);
+
+    if (varr) {
+      defaultStartGame(varr);
+      return;
+    }
+
+    if (canProceed && startedGame) {
+      setCanProceed(false);
+      defaultStartGame(varr);
+      
+      setPreviewNum(1)
+      await delay(500)
+
+      
+      setPreviewNum(g_currentPosition + 1)
+      g_setCurrentPosition(g_currentPosition + 1)
+      await delay(1000)
+
+      if (g_currentPosition + 1 >= g_vars.maxPosition + 1) {
+        setProcessEnded(true);
+      }
+
+      setCanProceed(true);
     }
   }
 
@@ -813,38 +808,42 @@ function PracticePage() {
   useEffect(() => {
     const timer = setInterval(() => {
       if (didStartGame.current) {
-        const timeSaved = g_OriginalTimeSaved + 1;
-        let string = ''
-        let minutesString = ''
-        let secondsString = ''
-        let seconds = timeSaved
-        let minutes = 0;
-        g_setOriginalTimeSaved(g_OriginalTimeSaved + 1);
+        g_setOriginalTimeSaved((prevTime) => {
+          if (processEnded) return prevTime;
+          const timeSaved = prevTime + 1;
+          let string = ''
+          let minutesString = ''
+          let secondsString = ''
+          let seconds = timeSaved
+          let minutes = 0;
 
-        for (let i = seconds; i > 59; i -= 60) {
-          minutes++;
-          seconds -= 60;
-        }
+          for (let i = seconds; i > 59; i -= 60) {
+            minutes++;
+            seconds -= 60;
+          }
 
-        minutesString = '0' + String(minutes)
+          minutesString = '0' + String(minutes)
 
-        if (minutes > 9) {
-          minutesString = String(minutes)
-        }
+          if (minutes > 9) {
+            minutesString = String(minutes)
+          }
 
-        secondsString = '0' + seconds
+          secondsString = '0' + seconds
 
-        if (seconds > 9) {
-          secondsString = String(seconds)
-        }
+          if (seconds > 9) {
+            secondsString = String(seconds)
+          }
 
-        string = minutesString + ':' + secondsString
-        g_setTimeSaved(string);
+          string = minutesString + ':' + secondsString
+          g_setTimeSaved(string);
+
+          return timeSaved;
+        });
       }
-    }, 1000)
+  }, 1000);
 
-    return () => clearInterval(timer)
-  })
+  return () => clearInterval(timer);
+  }, [processEnded]);
   
   // Html
   return (
@@ -870,10 +869,10 @@ function PracticePage() {
           </div>
 
          <div className='side-by gap'>
-          <CircularProgress percentage={Math.round((g_currentPosition / g_vars.maxPosition) * 100)} size={100} color="#6366f1"/>
+          <CircularProgress percentage={Math.round(((g_currentPosition - 1) / g_vars.maxPosition) * 100)} size={100} color="#6366f1"/>
           
           <div className='down-by'>
-            <p className='grey-txt'>{g_currentPosition} / {g_vars.maxPosition}</p>
+            <p className='grey-txt'>{g_currentPosition - 1} / {g_vars.maxPosition}</p>
             <p className='grey-txt'>Positions</p>
           </div>
          </div>
@@ -899,9 +898,14 @@ function PracticePage() {
           </div>
 
           <div>
-            <p className='grey-txt'>The goal is to survive {g_vars.maxPosition} moves.</p>
-            <p className='grey-txt'>Focus on piece safety and king safety.</p>
-            <p className='grey-txt'>Good Luck!</p>
+            <p className='grey-txt'>The goal is to survive {g_vars.minMoves} moves.</p>
+            <ul>
+              <li><p className='grey-txt'>To take is a <span className='bold-txt'>mistake</span></p></li>
+              <li><p className='grey-txt'>Offense is the best <span className='bold-txt'>defense</span></p></li>
+              <li><p className='grey-txt'>Counter a threat with a stronger <span className='bold-txt'>threat</span></p></li>
+              <li><p className='grey-txt'>Improve your least active <span className='bold-txt'>piece</span> </p></li>
+              <li><p className='grey-txt'>Remove opposing piece's on your side of the <span className='bold-txt'>board</span></p></li>
+            </ul>
           </div>
         </article>
       </div>
@@ -912,7 +916,7 @@ function PracticePage() {
             <Puzzle size={35}/>
 
             <div>
-              <p className='top-txt'>Position {g_currentPosition} / {g_vars.maxPosition}</p>
+              <p className='top-txt'>Position {g_currentPosition - 1} / {g_vars.maxPosition}</p>
               <p className='grey-txt'>From your lost games</p>
             </div>
           </article>
@@ -937,7 +941,18 @@ function PracticePage() {
         </section>
 
         <article className='chess-holder'>
-          {startedGame ? (<section className='chess-container'>
+          {processEnded && (
+            <>
+            <section className='results-page'>
+              <h2>Results</h2>
+              <ul>
+                <li className='grey-txt'>{g_currentPosition} Positions completed</li>
+                <li className='grey-txt'>{g_timeSaved} Time spent</li>
+              </ul>
+            </section>
+            </>
+          )}
+          {startedGame && canProceed && !processEnded && (<section className='chess-container smoothAnim'>
             <Chessboard options={{
               onPieceDrop: movePiece,
               onPieceClick: showDots,
@@ -982,27 +997,36 @@ function PracticePage() {
               },
             }}/>
           </section>
-          ) : (
+          )} 
+          {!startedGame && canProceed && !processEnded && (
             <>
             <div className='start-game-section'>
               <div className='side-by'>
                 <ChessBishop/>
                 <h2>Practice</h2>
               </div>
-              <p className='grey-txt desc'>Survive {g_vars.maxPosition} moves from your previous lost positions, data is collected from your stats</p>
+              <p className='grey-txt desc'>Survive {g_vars.minMoves} moves from your previous lost positions, data is collected from your stats</p>
               <button className='start-game-btn' onClick={initialStartGame}>Start</button>
             </div>
             </>
-            )}
+          )}
+
+          {(!canProceed && !processEnded) && (
+            <>
+            <CircularProgress _class='smoothAnim' percentage={Math.round(((previewNum - 1) / g_vars.maxPosition) * 100)} size={200} color="#6366f1"/>
+            </>
+          )}
+
+
         </article>
 
         <div className='bottom-btns-p'>
-          <button>
+          <button onClick={() => nextGamePosition(false)}>
             <Flag/>
             <p>Skip</p>
           </button>
 
-          <button>
+          <button onClick={() => nextGamePosition(true)}>
             <RotateCcw/>
             <p>Restart Position</p>
           </button>
@@ -1013,7 +1037,7 @@ function PracticePage() {
           <div className='left-panel'>
             <h2>Game</h2>
             
-            <section id='moves' ref={historyRef}>
+            <section className='smoothAnim' id='moves' ref={historyRef}>
               {history && (
                 Object.values(history).map((move, index) => (
                   <article className='move-parent' key={index}>
