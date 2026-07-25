@@ -8,6 +8,13 @@ const userSchema = new mongoose.Schema({
     games: Array,
     stats: Array,
     chessUsername: String,
+
+    subscription: {
+        status: {type: String, default: 'free'},
+        stripeCustomerId: {type: String, default: null},
+        stripeSubscriptionId: {type: String, default: null},
+        currentPeriodEnd: {type: Date, default: null}
+    }
 });
 
 export default mongoose.model('User', userSchema)

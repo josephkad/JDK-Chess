@@ -14,6 +14,7 @@
     flex-direction: column;
     height: 100vh;
     gap: 1rem;
+    animation: fadeInWTranslate 1.2s ease;
 }
 
 .title{
@@ -37,4 +38,15 @@
 .sign-out-txt{
     color: rgb(148, 61, 61);
     font-weight: bold;
+}
+
+@keyframes fadeInWTranslate {
+    from {
+        transform: translateY(1rem);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0rem);
+        opacity: 1;
+    }
 }

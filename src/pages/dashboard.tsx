@@ -1,4 +1,4 @@
-import { House, Settings, ChartNoAxesCombined, BookOpen } from "lucide-react"
+import { House, Settings, ChartNoAxesCombined, BookOpen, Diamond, Gem } from "lucide-react"
 import { NavLink, Outlet } from "react-router-dom"
 import { useEffect, useState } from "react";
 import '../styles/default.css'
@@ -38,17 +38,17 @@ function Dashboard() {
             </section>
 
             <section className="middle">
-                <NavLink to='' end className={({isActive}) => isActive? 'stat active' : 'stat'}>
-                    <House/>
-                    <p>Home</p>
+                <NavLink to='stats' className={({isActive}) => isActive? 'stat active' : 'stat'}>
+                    <ChartNoAxesCombined/>
+                    <p>Stats</p>
                 </NavLink>
                 <NavLink to='practice' className={({isActive}) => isActive? 'stat active' : 'stat'}>
                     <BookOpen/>
                     <p>Practice</p>
                 </NavLink>
-                <NavLink to='stats' className={({isActive}) => isActive? 'stat active' : 'stat'}>
-                    <ChartNoAxesCombined/>
-                    <p>Stats</p>
+                <NavLink to='premium' className={({isActive}) => isActive? 'stat active' : 'stat'}>
+                    <Gem/>
+                    <p>Premium</p>
                 </NavLink>
                 <NavLink to='settings' className={({isActive}) => isActive? 'stat active' : 'stat'}>
                     <Settings/>

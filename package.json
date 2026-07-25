@@ -23,7 +23,8 @@
     "react-chessboard": "^5.10.0",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1",
-    "stockfish.js": "^10.0.2"
+    "stockfish.js": "^10.0.2",
+    "stripe": "^22.3.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

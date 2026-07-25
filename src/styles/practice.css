@@ -20,7 +20,7 @@
 .full-page.p{
     margin-left: 20rem;
     display: flex;
-    animation: fadeInWTranslate 0.2s ease;
+    animation: fadeInWTranslate 1.2s ease;
     padding: 1.2rem 0rem;
 }
 

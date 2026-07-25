@@ -13,6 +13,9 @@ import cors from 'cors';
 import session from 'express-session';
 import { json } from 'stream/consumers';
 
+import Stripe from "stripe";
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
 const loggedOutURL = 'http://localhost:5173';
 const loggedInURL = loggedOutURL + '/dashboard';
 const app = express();
@@ -46,6 +49,43 @@ app.use(cors({
     origin: loggedOutURL,
     credentials: true
 }));
+
+app.post("/api/stripe/webhook", express.raw({type:'application/json'}), async (req,res)=>{
+  let event
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      req.headers["stripe-signature"]!,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    );
+  } catch(err) {
+    console.log('Webhook error:', err)
+    return res.status(400).send('Webhook failed')
+  }
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+    const userId = session.metadata?.userId;
+    if (!session.subscription) return res.status(409).send("No subscription ID");
+
+    const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription.id;
+    const subscription : any = await stripe.subscriptions.retrieve(subscriptionId);
+    if (!subscription) return res.status(400).send("No subscription ID");
+    
+    const updatedUser = await User.findByIdAndUpdate(userId, {
+        subscription: {
+          status: subscription.status,
+          stripeCustomerId: session.customer,
+          stripeSubscriptionId: session.subscription,
+          currentPeriodEnd: new Date(subscription.items.data[0].current_period_end * 1000)
+      }
+    },{returnDocument : 'after'});
+    console.log("Paid user:", userId, updatedUser);
+  }
+
+  res.json({recieved: true})
+});
 
 app.use(express.json());
 app.use(session({secret: process.env.SESSION_SECRET!, resave: false, saveUninitialized: false}))
@@ -296,7 +336,7 @@ app.post('/api/saveStats', async (req, res) => {
       stats: stats,
       chessUsername: username,
     },{returnDocument : 'after'});
-    console.log(stats)
+    
     return res.json(updatedUser);
   } catch (err){
     console.log(err);
@@ -304,7 +344,38 @@ app.post('/api/saveStats', async (req, res) => {
   }
 })
 //JnxZ_u
-app.post('/auth/register', async (req, res) => {console.log('made it')})
+
+app.post("/api/create-checkout-session", async (req, res) => {
+  const user = req.user
+  const userId = user? (req.user as any)?.id : undefined;
+
+  if (!user) {return res.status(404).json({error: 'No user found'})}
+
+  const session = await stripe.checkout.sessions.create({
+    mode: "subscription",
+
+    line_items: [
+        {
+            price: "price_1TwoZTCRQpxggYMCnJudIHCt",
+            quantity: 1,
+        },
+    ],
+
+    success_url:
+        "http://localhost:5173/dashboard?success=true",
+
+    cancel_url:
+        "http://localhost:5173/pricing?cancelled=true",
+
+    metadata: {
+      userId: userId.toString()
+    }
+  });
+
+  res.json({
+    url: session.url
+  });
+});
 
 // Listen
 app.listen(3000, () => {
