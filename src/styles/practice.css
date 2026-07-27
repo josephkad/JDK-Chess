@@ -1,312 +1,351 @@
-.full-page.p{
-    margin-left: 20rem;
+@import url('./default.css');
+
+/* Main Page Container */
+.full-page.p {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 1.5rem min(3vw, 2rem);
     display: flex;
-    padding: 1.2rem 0rem;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-.full-page.p .page-vert{
-    animation: fadeInWTranslate 1.2s ease;
+/* Page Columns Layout */
+.page-vert {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: flex-start;
+    justify-content: center;
+    width: 100%;
+    animation: fadeInWTranslate 0.8s ease;
 }
 
-.general-chess-area{
+.page-start {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    flex: 1 1 280px;
+    max-width: 320px;
+}
+
+.general-chess-area {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    flex: 3 1 650px;
+    max-width: 750px;
+    align-items: center;
+    width: 100%;
+}
+
+.page-horizontal {
+    display: flex;
+    flex: 1 1 280px;
+    max-width: 340px;
+}
+
+/* Dark Box Cards */
+.dark-box {
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: #101624;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
-.page-vert{
+.dark-box.ext { height: auto; }
+.dark-box.small-box { padding: 1.2rem 1.5rem; }
+.dark-box.tips { font-size: 0.95rem; }
+
+.dark-box.tips ul {
+    margin-top: 0.5rem;
+    padding-left: 1.2rem;
     display: flex;
-    gap: 1rem;
+    flex-direction: column;
+    gap: 0.4rem;
 }
 
-.bottom-btns-p{
-    display: flex;
-    gap: 1rem;
+.dark-box.tips .bold-txt {
+    color: white;
+    font-style: italic;
+    font-weight: 600;
 }
 
-.bottom-btns-p button, .start-game-btn{
-    all:unset;
-    display: flex;
-    gap: 0.5rem;
-    background:#101624;
-    border:1px solid rgba(255,255,255,.05);
-    padding: 0.4rem 1rem;
+.big-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+}
+
+/* Top Information Bar */
+.mid-bar {
+    background: #101624;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: var(--border-radius);
-    transition: 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    width: 100%;
+    padding: 1.2rem 1rem;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
-.bottom-btns-p button:hover, .start-game-btn:hover{
+.mid-bar article {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.95rem;
+}
+
+.top-txt {
+    font-weight: 600;
+    color: white;
+}
+
+/* --- FIXED CHESSBOARD CONTAINER --- */
+.chess-holder {
+    width: min(100%, 700px);
+    aspect-ratio: 1 / 1;
+    height: auto; /* Allow height to strictly track aspect-ratio */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius);
+    background: #101624;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 0.8rem;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    box-sizing: border-box;
+}
+
+.chess-container {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: calc(var(--border-radius) - 4px);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Force inner library SVG/Canvas element to scale smoothly without distortion */
+.chess-container > div, 
+.chess-container svg {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Start Screen & Action Buttons */
+.start-game-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.2rem;
+    padding: 2rem;
+}
+
+.start-game-btn {
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 0.8rem 2.5rem;
+    background: var(--btn);
+    color: white;
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease;
     cursor: pointer;
-    background:#25315066;
+    border: none;
 }
 
-.page-horizontal{
+.start-game-btn:hover {
+    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+    transform: translateY(-2px);
+}
+
+.bottom-btns-p {
     display: flex;
     gap: 1rem;
+    width: 100%;
+    justify-content: center;
 }
 
-.top-sec{
+.bottom-btns-p button {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 0.5rem;
-}
-
-.grey-txt{
-    color: grey;
-}
-
-.mid-bar{
-    background:#101624;
-    border:1px solid rgba(255,255,255,.05);
+    background: #101624;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 0.6rem 1.2rem;
     border-radius: var(--border-radius);
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: auto;
-    min-height: 5rem;
-
-    padding: 1rem 3rem;
-    --size: 46rem;
-    min-width: var(--size);
+    color: var(--text-muted);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.mid-bar article{
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    font-size: medium;
+.bottom-btns-p button:hover {
+    background: #172136;
+    color: white;
 }
 
-.left-panel{
-    width: 20rem;
-    max-height: 50rem;
+/* Move Notation Sidebar */
+.left-panel {
+    width: 100%;
+    height: 100%;
+    max-height: 680px;
     border-radius: var(--border-radius);
-    padding: 2rem 2rem;
-
-    background:#101624;
-    border:1px solid rgba(255,255,255,.05);
-
+    padding: 1.5rem;
+    background: #101624;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.2rem;
 }
 
-#moves::-webkit-scrollbar {
-    width: 8px;
+.left-panel h2 {
+    font-size: 1.2rem;
+    color: white;
 }
 
-#moves::-webkit-scrollbar-track {
-    background: #1c2433;
-}
-
-#moves::-webkit-scrollbar-thumb {
-    background: #4b5b73;
-    border-radius: 8px;
-}
-
-#moves::-webkit-scrollbar-thumb:hover {
-    background: #667a98;
-}
-
-#moves{
+#moves {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    max-height: 50rem;
-    min-height: 35rem;
-    gap: 1rem;
+    flex: 1;
+    min-height: 250px;
+    gap: 0.4rem;
+    padding-right: 0.3rem;
 }
 
-.move-parent, .moves-inside{
+#moves::-webkit-scrollbar { width: 6px; }
+#moves::-webkit-scrollbar-track { background: #101624; }
+#moves::-webkit-scrollbar-thumb {
+    background: #253147;
+    border-radius: 4px;
+}
+
+.move-parent {
     display: flex;
-    flex-direction: row;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    padding: 0.4rem 0.6rem;
+    font-size: 0.95rem;
+    color: var(--text-muted);
 }
 
-.move-parent{
-    border-bottom:1px solid rgba(255,255,255,.05);
-    height: 2rem;
-    border-radius: 0.3rem;
-}
-
-.move-parent, .moves-inside{
-    animation: fadeInWTranslate 0.3s ease;
-}
-
-.moves-inside{
+.moves-inside {
+    display: flex;
     width: 100%;
-    justify-content: space-between;
-    margin-left: 1rem;
-    margin-right: 4rem;
-    padding: 0rem 1rem;
+    justify-content: space-around;
+    margin-left: 0.8rem;
 }
 
-.chess-container{
-    --size: 95%;
-    width: var(--size);
-    height: var(--size);
-    border-radius: var(--border-radius);
-    overflow: hidden;
-}
-
-.chess-holder{
-    --size: 46rem;
-    max-width: var(--size);
-    max-height: var(--size);
-    aspect-ratio: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--border-radius);
-    background-color: white;
-    border:1px solid rgba(255,255,255,.05);
-    background:#101624;
-}
-
-.game-move{
-    all: unset;
-}
-
-.game-move:hover{
+.game-move {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
     cursor: pointer;
-    user-select: none;
+    transition: all 0.15s ease;
 }
 
-.bottom-buttons{
+.game-move:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.bottom-buttons {
     display: flex;
-    gap: 1rem;
-}
-
-.bottom-buttons button{
-    width: 3rem;
-    height: 3rem;
-}
-
-.page-start{
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    font-size: medium;
-}
-
-.dark-box{
-    width: 20rem;
-    height: 12rem;
-    border:1px solid rgba(255,255,255,.05);
-    background:#101624;
-    border-radius: var(--border-radius);
-    padding: 2rem 2rem;
-    display: flex;
-    justify-content: flex-start;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.dark-box.ext{
-    height: auto;
-}
-
-.dark-box.small-box{
-    padding: 1.5rem 2rem;
-    height: 10rem;
-}
-
-.dark-box.tips{
-    font-size: 0.96rem;
-    height: auto;
-}
-
-.side-by{
-    display: flex;
-    align-items: center;
     gap: 0.5rem;
-}
-
-.side-by.surv{
-    display: flex;
-    flex-wrap: wrap;
-    height: 2rem;
-}
-
-.side-by.gap{
-    gap: 1rem;
-}
-
-.down-by{
-    display: flex;
-    flex-direction: column;
     justify-content: center;
+    width: 100%;
 }
 
-.survival-history{
-    --size: 2.25rem;
-    width: var(--size);
-    height: 100%;
+.bottom-buttons .style-btn {
+    height: 2.5rem;
+    padding: 0 0.8rem;
+    font-size: 0.9rem;
+    background: #101624;
+    border: 1px solid rgba(255,255,255,0.05);
+    color: white;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+}
+
+.bottom-buttons .style-btn:hover {
+    background: #172136;
+}
+
+/* Helpers & Badges */
+.grey-txt { color: #8a99ad; }
+.side-by { display: flex; align-items: center; gap: 0.6rem; }
+.side-by.surv { display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 2.2rem; }
+.side-by.gap { gap: 1.2rem; }
+.down-by { display: flex; flex-direction: column; justify-content: center; }
+
+.survival-history {
+    width: 2.2rem;
+    height: 2.2rem;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: 0.3s ease;
+    font-size: 0.85rem;
+    font-weight: bold;
 }
 
-.survival-history.surv-active{
+.survival-history.surv-active {
     border: 2px solid #22c55e;
-    background-color: rgba(34, 197, 94, 0.08);
+    background-color: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
 }
 
-.survival-history.surv-on{
+.survival-history.surv-on {
     border: 2px solid #818cf8;
-    background-color: rgba(129, 140, 248, 0.12);
-    box-shadow: 0 0 12px rgba(129, 140, 248, 0.35);
+    background-color: rgba(129, 140, 248, 0.15);
+    color: #818cf8;
+    box-shadow: 0 0 10px rgba(129, 140, 248, 0.3);
 }
 
-.survival-history.surv-inactive{
-    border: 1.5px solid #272d37;
+.survival-history.surv-inactive {
+    border: 1px solid #272d37;
     background-color: #161b22;
+    color: #4b5563;
 }
 
-.start-game-section{
+.results-page {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1rem;
-}
-
-.desc{
     text-align: center;
-    max-width: 20rem;
 }
 
-.smoothAnim{
-    animation: fadeInWTranslate 0.3s ease;
-}
-
-.dark-box.tips .bold-txt{
-    color: white;
-    font-style: italic;
-}
-
-.results-page{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.spin-center.pt{
-    display: flex;
-}
-
-.stats-txt{
+.stats-txt {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%;
-    font-size: xxx-large;
-    font-weight: bold;
+    min-height: 60vh;
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
+    font-weight: 700;
+    text-align: center;
 }
 
-.stats-txt .purple-txt{
+.stats-txt .purple-txt {
+    color: #a855f7;
     text-decoration: underline;
+}
+
+.smoothAnim {
+    animation: fadeInWTranslate 0.3s ease;
 }
 
 @keyframes fadeInWTranslate {
@@ -315,7 +354,15 @@
         opacity: 0;
     }
     to {
-        transform: translateY(0rem);
+        transform: translateY(0);
         opacity: 1;
+    }
+}
+
+/* Tablet & Mobile Responsiveness */
+@media (max-width: 1024px) {
+    .page-start, .general-chess-area, .page-horizontal {
+        max-width: 100%;
+        flex: 1 1 100%;
     }
 }
