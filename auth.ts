@@ -12,6 +12,7 @@ await mongoose.connect(process.env.MONGO_URI!);
 import cors from 'cors';
 import session from 'express-session';
 import { json } from 'stream/consumers';
+import { Chess, type Square } from 'chess.js';
 
 import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -81,7 +82,45 @@ app.post("/api/stripe/webhook", express.raw({type:'application/json'}), async (r
           currentPeriodEnd: new Date(subscription.items.data[0].current_period_end * 1000)
       }
     },{returnDocument : 'after'});
-    console.log("Paid user:", userId, updatedUser);
+    console.log("Paid user:", userId);
+  }
+
+  if (event.type === "customer.subscription.deleted") {
+    const subscription = event.data.object;
+
+    const updatedUser = await User.findOneAndUpdate(
+        {
+            "subscription.stripeSubscriptionId": subscription.id
+        },
+        {
+            "subscription.status": "free"
+        },
+        {
+            returnDocument: "after"
+        }
+    );
+
+    console.log("Subscription canceled:");
+  }
+
+  if (event.type === "customer.subscription.updated") {
+    const subscription = event.data.object;
+
+    const updatedUser = await User.findOneAndUpdate(
+        {
+            "subscription.stripeSubscriptionId": subscription.id
+        },
+        {
+            "subscription.status": subscription.status,
+            "subscription.currentPeriodEnd":
+                new Date(subscription.items.data[0].current_period_end * 1000)
+        },
+        {
+            returnDocument: "after"
+        }
+    );
+
+    console.log("Subscription updated:");
   }
 
   res.json({recieved: true})
@@ -312,6 +351,24 @@ function getStats(games : Array<any>, chessName : string, timeClass : string) {
   return stats;
 }
 
+function getRandomGame(userStats : any) {
+    if (!userStats) return null;
+    let chosen = null;
+    
+    for (const lost_g of  userStats[0].all_games_lost) {
+      if (chosen == null || Math.floor(Math.random() * 15) == 10) {
+        const loadedGame = new Chess()
+        loadedGame.loadPgn(lost_g.pgn)
+        const loadedGameHistoryLength = loadedGame.history().length
+
+        if (loadedGameHistoryLength < 10) continue;
+        chosen = lost_g;
+      }
+    }
+
+    return chosen;
+  }
+
 // Content
 app.post('/api/saveStats', async (req, res) => {
   const username = req.body.username;
@@ -365,7 +422,7 @@ app.post("/api/create-checkout-session", async (req, res) => {
         "http://localhost:5173/dashboard?success=true",
 
     cancel_url:
-        "http://localhost:5173/pricing?cancelled=true",
+        "http://localhost:5173/dashboard/premium",
 
     metadata: {
       userId: userId.toString()
@@ -376,6 +433,105 @@ app.post("/api/create-checkout-session", async (req, res) => {
     url: session.url
   });
 });
+
+app.post("/api/create-portal-session", async (req, res) => {
+    const user : any = req.user;
+
+    if (!user) {
+        return res.status(401).json({
+            error: "Not logged in"
+        });
+    }
+
+    const session = await stripe.billingPortal.sessions.create({
+        customer: user.subscription.stripeCustomerId,
+
+        return_url:
+            "http://localhost:5173/dashboard/settings"
+    });
+
+    res.json({
+        url: session.url
+    });
+});
+
+app.get('/api/get-user-info', async (req, res) => {
+  const user = req.user as any
+  if (!user) return res.status(401).json({error: 'Not logged in'})
+  res.json(user)
+})
+
+app.get('/api/get-practice-info', async (req, res) => {
+  const user = req.user as any
+  const userId = user? user.id : undefined
+  const gameStats = user? user.gameStats : undefined
+  if (!user) return res.status(401).json({error: 'Not logged in'})
+
+  const dataSending = {positionsPracticed: 0, nextAvaliable: null, randomGame: null}
+  const hasPremium = user.subscription.status === "active" && user.subscription.currentPeriodEnd > new Date();
+  let canGiveGame = true
+  
+  if (hasPremium) {
+    let remaining = gameStats.positionsPracticed
+    let avaliable = gameStats.nextAvaliable
+
+    if (gameStats.positionsPracticed < 1) {
+      remaining = 11
+      dataSending.positionsPracticed = remaining
+    } else {
+      dataSending.positionsPracticed = gameStats.positionsPracticed - 1
+      remaining = dataSending.positionsPracticed
+    }
+
+    await User.findByIdAndUpdate(userId, {
+      gameStats: {
+        positionsPracticed: remaining,
+        nextAvaliable: avaliable
+      }
+    });
+  } else {
+    let remaining = gameStats.positionsPracticed
+    let avaliable = gameStats.nextAvaliable
+
+    if (gameStats.positionsPracticed < 1) {
+      if (avaliable && avaliable < new Date()) {
+        remaining = 11
+        avaliable = null
+        dataSending.positionsPracticed = remaining
+      } else {
+        canGiveGame = false
+        dataSending.positionsPracticed = remaining
+        dataSending.nextAvaliable = avaliable
+  
+        if (!avaliable) {
+          avaliable = new Date(Date.now() + 10 * 1000)
+          dataSending.nextAvaliable = avaliable
+        }
+      }
+    } else {
+      dataSending.positionsPracticed = gameStats.positionsPracticed - 1
+      remaining = dataSending.positionsPracticed
+
+      if (remaining == 0 && !avaliable) {
+        avaliable = new Date(Date.now() + 10 * 1000)
+        dataSending.nextAvaliable = avaliable
+      }
+    }
+
+    await User.findByIdAndUpdate(userId, {
+      gameStats: {
+        positionsPracticed: remaining,
+        nextAvaliable: avaliable
+      }
+    });
+  }
+
+  if (canGiveGame) {
+    dataSending.randomGame = getRandomGame(user.stats)
+  }
+
+  res.json(dataSending)
+})
 
 // Listen
 app.listen(3000, () => {

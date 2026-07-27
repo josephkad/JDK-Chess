@@ -1,27 +1,11 @@
-/*
-<section className='full-page p'>
-      <div className='left-panel'>
-        <h2>Game</h2>
-        
-        <section id='moves'>
-          <article className='move-parent'>
-            <p>1.</p>
-
-            <article className='moves-inside'>
-              <p className='first-move'>e4</p>
-              <p className='second-move'>c5</p>
-            </article>
-          </article>
-        </section>
-      </div>
-    </section>
-*/
-
 .full-page.p{
     margin-left: 20rem;
     display: flex;
-    animation: fadeInWTranslate 1.2s ease;
     padding: 1.2rem 0rem;
+}
+
+.full-page.p .page-vert{
+    animation: fadeInWTranslate 1.2s ease;
 }
 
 .general-chess-area{
@@ -218,6 +202,10 @@
     gap: 1rem;
 }
 
+.dark-box.ext{
+    height: auto;
+}
+
 .dark-box.small-box{
     padding: 1.5rem 2rem;
     height: 10rem;
@@ -302,6 +290,23 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+.spin-center.pt{
+    display: flex;
+}
+
+.stats-txt{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: xxx-large;
+    font-weight: bold;
+}
+
+.stats-txt .purple-txt{
+    text-decoration: underline;
 }
 
 @keyframes fadeInWTranslate {

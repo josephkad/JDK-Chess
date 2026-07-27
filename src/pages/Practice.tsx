@@ -33,7 +33,8 @@ type redS = {
 
 const g_vars = {
   maxPosition: 10,
-  minMoves: 5,
+  minMoves: 2,
+  subbing: 11,
 }
 
 const survivalHistoryTemp : number[] = []
@@ -58,7 +59,7 @@ function PracticePage() {
   const evalRef = useRef<any>(null)
   const gameRef = useRef(new Chess());
   const moveRef = useRef(movePiece)
-  const {user, _} = useUserVar();
+  const {user, setUser} : any = useUserVar();
   const userStats : any = useState(user?.stats? user.stats[0] : null);
   const didStartGame = useRef(false);
 
@@ -75,7 +76,7 @@ function PracticePage() {
   const [bordOrientation, setBoardOrientation] = useState<'white' | 'black'>('white');
   const [startedGame, setStartedGame] = useState(false);
 
-  const [g_currentPosition, g_setCurrentPosition] = useState(10);
+  const [g_currentPosition, g_setCurrentPosition] = useState(1);
   const [g_currentMoveSurvived, g_setCurrentMoveSurvived] = useState(0);
   const [g_variation, g_setVariation] = useState('King\'s Indian Defense: ... Variation');
   const [g_info, g_setInfo] = useState('This position is from a game you lost on May 12, 2025...');
@@ -83,6 +84,7 @@ function PracticePage() {
   const [g_OriginalTimeSaved, g_setOriginalTimeSaved] = useState(0);
   const [g_survival, g_setSurvival] = useState({});
   const [g_currentColor, g_setCurrentColor] = useState('---');
+  const [g_displayNum, g_setDisplayNum] = useState(g_currentPosition)
 
   const [lastPlayedGame, setLastPlayedGame] = useState<any>(null);
   const [lastPlayedLoopedThrough, setLastPlayedLoopedThrough] = useState(0);
@@ -91,6 +93,12 @@ function PracticePage() {
   const [continueAfterEngine, setContinueAfterEngine] = useState(false);
   const [movingOn, setMovingOn] = useState(false);
   const [processEnded, setProcessEnded] = useState(false)
+  const [btnDebounce, setBtnDebounce] = useState(false)
+  const [newServInfo, setNewServInfo] = useState<any>(null)
+  const [timeRemainingTxt, setTimeRemainingTxt] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [allLoading, setAllLoading] = useState(true)
+  const hasPremium = user? user.subscription?.status === "active" && user.subscription.currentPeriodEnd > new Date() : false;
 
 
   //  Functions
@@ -129,6 +137,7 @@ function PracticePage() {
     if ((!targetSquare || (engineTurn && !fromEngine)) || movingOn ) {
         return false;
     }
+    
     const gameCopy = new Chess(gameRef.current.fen()) //new Chess(game.fen());
     let move;
     let wasWhite = false;
@@ -179,12 +188,15 @@ function PracticePage() {
         white: white
       })
 
+      let continuingAfter = false;
+
       if (!engineTurn) {
         const newVal = g_currentMoveSurvived - 1
         g_setCurrentMoveSurvived(g_currentMoveSurvived - 1)
-
+        
         if (newVal == 0) {
           setContinueAfterEngine(true)
+          continuingAfter = true;
         }
       }
 
@@ -200,12 +212,13 @@ function PracticePage() {
         setContinueAfterEngine(false);
         setMovingOn(true);
         setTimeout(() => {nextGamePosition(false);}, 250);
-      } else if (!continueAfterEngine) {
+      } else if (!continuingAfter) {
         setEngineTurn(!fromEngine? true : false)
       } else {
         setContinueAfterEngine(false);
-        setTimeout(() => {nextGamePosition(false);}, 200);
-        setMovingOn(true);
+        setEngineTurn(!fromEngine? true : false)
+        setTimeout(() => {nextGamePosition(false);}, 800);
+        //setMovingOn(true);
       }
 
       wasWhite = white;
@@ -447,24 +460,6 @@ function PracticePage() {
     }
   }
 
-  function getRandomGame() {
-    if (!userStats) return null;
-    let chosen = null;
-    
-    for (const lost_g of  userStats[0].all_games_lost) {
-      if (chosen == null || Math.floor(Math.random() * 15) == 10) {
-        const loadedGame = new Chess()
-        loadedGame.loadPgn(lost_g.pgn)
-        const loadedGameHistoryLength = loadedGame.history().length
-
-        if (loadedGameHistoryLength < 10) continue;
-        chosen = lost_g;
-      }
-    }
-
-    return chosen;
-  }
-
   function evaluatePosition(fen: string): Promise<number> {
     return new Promise((resolve) => {
       const engine = evalRef.current;
@@ -546,8 +541,9 @@ function PracticePage() {
     return classN;
   }
 
-  function defaultStartGame(sent : boolean) {
-    const randomGame : any = sent? lastPlayedGame : getRandomGame()
+  function defaultStartGame(sent : boolean, randoGame : any) {
+    const randomGame : any = sent? lastPlayedGame : randoGame
+    if (!randomGame) return
     const colorPlaying = randomGame?.black?.result == 'win' ? 'white' : 'black';
     const computerColor = colorPlaying == 'white'? 'black' : 'white';
     const newGame = new Chess()
@@ -667,41 +663,144 @@ function PracticePage() {
     setOptionSquares({})
   }
 
-  function initialStartGame() {
-    if (!startedGame) {
-      setStartedGame(true);
-      defaultStartGame(false);
-      didStartGame.current = true;
+  function getTimeRemaining(date: string | Date) {
+    const difference = new Date(date).getTime() - new Date().getTime();
+
+    if (difference <= 0) {
+        return "Available now";
     }
+
+    const totalSeconds = Math.floor(difference / 1000);
+
+    const days = Math.floor(totalSeconds / (24 * 60 * 60));
+    const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
+    const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+    const seconds = totalSeconds % 60;
+
+    let result = "";
+
+    if (days > 0) result += `${days} day${days !== 1 ? "s" : ""}, `;
+    if (hours > 0) result += `${hours} hour${hours !== 1 ? "s" : ""}, `;
+    if (minutes > 0) result += `${minutes} minute${minutes !== 1 ? "s" : ""}, `;
+    result += `${seconds} second${seconds !== 1 ? "s" : ""}`;
+
+    return result;
   }
 
-  async function nextGamePosition(varr : any) {
-    if (processEnded) return;
+  async function getServerInfo() {
+    setLoading(true)
+    let res
+    let data : any;
+
+    try{
+      res = await fetch('http://localhost:3000/api/get-practice-info', {credentials: 'include'})
+      data = await res.json()
+      
+      if (data.positionsPracticed) {
+        let pos = g_vars.subbing - data.positionsPracticed
+
+        if (pos > g_vars.maxPosition) {
+          pos = 10
+        }
+
+        g_setCurrentPosition(g_vars.subbing - data.positionsPracticed)
+        g_setDisplayNum(pos)
+      }
+
+      if (data?.nextAvaliable) {
+        setTimeRemainingTxt(getTimeRemaining(new Date(data.nextAvaliable)))
+
+        setUser((prev : any) => ({
+          ...prev,
+          gameStats: {
+            ...prev.gameStats,
+            nextAvaliable: data.nextAvaliable
+          }
+        }))
+      }
+    } catch(err) {
+      console.log('getServerInfo Error:', err)
+    } finally{
+      setLoading(false)
+    }
+
+    return data
+  }
+
+  async function initialStartGame() {
+    if (btnDebounce) return
+    setBtnDebounce(true)
+
+    if (!startedGame) {
+      const servInfo = await getServerInfo()
+      setNewServInfo(servInfo)
+      
+      if (servInfo.randomGame) {
+        setStartedGame(true);
+        defaultStartGame(false, servInfo.randomGame);
+        didStartGame.current = true;
+      }
+    }
+
+    setBtnDebounce(false)
+  }
+
+  async function nextGamePosition(varr : any, restarting = false) {
+    if (!startedGame) return
+    if (g_currentPosition == g_vars.maxPosition) {
+      setLoading(true)
+      setStartedGame(false);
+      await delay(1000)
+      const servInfo = await getServerInfo()
+      setNewServInfo(servInfo)
+      setLoading(false)
+      return
+    }
+
+    if (btnDebounce) return
+    setBtnDebounce(true)
+
+    function resetCooldown() {
+      setBtnDebounce(false)
+    }
+
+    if (processEnded) {resetCooldown(); return};
     setMovingOn(false);
+    let servInfo
+
+    if (!restarting && canProceed && startedGame){
+      servInfo = await getServerInfo()
+      setNewServInfo(servInfo)
+    }
+    
+    const notRestartingAndGameNotRetrieved = !restarting && ((servInfo && !servInfo.randomGame) || varr)
+    if (notRestartingAndGameNotRetrieved) {resetCooldown(); return}
 
     if (varr) {
-      defaultStartGame(varr);
+      defaultStartGame(varr,  null);
+      resetCooldown()
       return;
     }
 
     if (canProceed && startedGame) {
       setCanProceed(false);
-      defaultStartGame(varr);
+      defaultStartGame(varr,  servInfo.randomGame);
       
       setPreviewNum(1)
       await delay(500)
 
       
-      setPreviewNum(g_currentPosition + 1)
-      g_setCurrentPosition(g_currentPosition + 1)
+      setPreviewNum(g_currentPosition + 2)
       await delay(1000)
 
       if (g_currentPosition + 1 >= g_vars.maxPosition + 1) {
-        setProcessEnded(true);
+        //setProcessEnded(true);
       }
 
       setCanProceed(true);
     }
+
+    resetCooldown()
   }
 
   useEffect(() => {
@@ -844,223 +943,304 @@ function PracticePage() {
 
   return () => clearInterval(timer);
   }, [processEnded]);
-  
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (user.gameStats) {
+        setTimeRemainingTxt(getTimeRemaining(new Date(user.gameStats.nextAvaliable)))
+      }
+    }, 1000);
+
+    if (!hasPremium) {      
+      return () => clearInterval(timer);
+    }
+
+  }, [timeRemainingTxt])
+
+  useEffect(() => {
+    let newUser = user
+
+    async function getNewUerInfo() {
+      const res = await fetch('http://localhost:3000/api/get-user-info', {credentials: 'include'})
+      const data = await res.json()
+      setUser(data)
+      setNewServInfo(data.gameStats)
+      newUser = data
+      g_setCurrentPosition(g_vars.subbing - newUser.gameStats.positionsPracticed)
+    }
+    
+    try{
+      getNewUerInfo()
+    } finally {
+      async function removeLoading() {
+        await delay(1000)
+        setAllLoading(false)
+      }
+
+      removeLoading()
+    }
+  }, [])
+
+  useEffect(() => {
+    let pos = g_currentPosition
+
+    if (pos > g_vars.maxPosition) {
+      pos = 10
+    }
+
+    g_setDisplayNum(pos)
+  }, [g_currentPosition])
+
   // Html
   return (
     <>
     <section className='full-page p'>
 
-    <section className='page-vert'>
-      <div className='page-start'>
-        <article className='dark-box'>
-          <div className='side-by'>
-            <Lightbulb/>
-            <p className='big-title'>About This Position</p>
-          </div>
-
-          <p className='grey-txt'>{g_variation}</p>
-          <p className='grey-txt'>{g_info}</p>
-        </article>
-
-        <article className='dark-box'>
-          <div className='side-by'>
-            <ChartNoAxesColumnIncreasing />
-            <p className='big-title'>Progress</p>
-          </div>
-
-         <div className='side-by gap'>
-          <CircularProgress percentage={Math.round(((g_currentPosition - 1) / g_vars.maxPosition) * 100)} size={100} color="#6366f1"/>
-          
-          <div className='down-by'>
-            <p className='grey-txt'>{g_currentPosition - 1} / {g_vars.maxPosition}</p>
-            <p className='grey-txt'>Positions</p>
-          </div>
-         </div>
-        </article>
-
-        <article className='dark-box small-box'>
-          <div className='side-by'>
-            <ShieldCheck />
-            <p className='big-title'>Survival History</p>
-          </div>
-
-          <div className='side-by surv'>
-            {survivalHistoryTemp.map((item, index) => (
-              <p key={index} className={getSurvivalActive(item)}>{item < g_currentPosition ? <Check size={20}/> : item}</p>
-            ))}
-          </div>
-        </article>
-
-        <article className='dark-box tips'>
-          <div className='side-by'>
-            <Spotlight/>
-            <p className='big-title'>Tips</p>
-          </div>
-
-          <div>
-            <p className='grey-txt'>The goal is to survive {g_vars.minMoves} moves.</p>
-            <ul>
-              <li><p className='grey-txt'>To take is a <span className='bold-txt'>mistake</span></p></li>
-              <li><p className='grey-txt'>Offense is the best <span className='bold-txt'>defense</span></p></li>
-              <li><p className='grey-txt'>Counter a threat with a stronger <span className='bold-txt'>threat</span></p></li>
-              <li><p className='grey-txt'>Improve your least active <span className='bold-txt'>piece</span> </p></li>
-              <li><p className='grey-txt'>Remove opposing piece's on your side of the <span className='bold-txt'>board</span></p></li>
-            </ul>
-          </div>
-        </article>
-      </div>
-
-      <div className='general-chess-area'>
-        <section className='mid-bar'>
-          <article >
-            <Puzzle size={35}/>
-
-            <div>
-              <p className='top-txt'>Position {g_currentPosition - 1} / {g_vars.maxPosition}</p>
-              <p className='grey-txt'>From your lost games</p>
-            </div>
-          </article>
-
-          <article >
-            <Shield size={35}/>
-
-            <div>
-              <p className='top-txt'>Survive {g_currentMoveSurvived} more moves</p>
-              <p className='grey-txt'>Computer is {g_currentColor}</p>
-            </div>
-          </article>
-
-          <article >
-            <Clock size={35}/>
-
-            <div>
-              <p className='top-txt'>{g_timeSaved}</p>
-              <p className='grey-txt'>Time Survived</p>
-            </div>
-          </article>
-        </section>
-
-        <article className='chess-holder'>
-          {processEnded && (
-            <>
-            <section className='results-page'>
-              <h2>Results</h2>
-              <ul>
-                <li className='grey-txt'>{g_currentPosition} Positions completed</li>
-                <li className='grey-txt'>{g_timeSaved} Time spent</li>
-              </ul>
-            </section>
-            </>
-          )}
-          {startedGame && canProceed && !processEnded && (<section className='chess-container smoothAnim'>
-            <Chessboard options={{
-              onPieceDrop: movePiece,
-              onPieceClick: showDots,
-              onPieceDrag: showDots,
-              onSquareClick: clickSquare,
-              onSquareRightClick: rightClickSquare,
-
-              position: getFen().fen,
-              allowDragOffBoard: false,
-              dragActivationDistance: 1.1,
-              boardOrientation: bordOrientation,
-              squareStyles: {
-                ...(lastMove && {
-                  [lastMove.from]: {
-                    backgroundColor: "rgba(255, 255, 51, 0.51)",
-                  },
-                  [lastMove.to]: {
-                    backgroundColor: "rgb(255, 255, 51, 0.51)",
-                  },
-                }),
-                ...optionSquares,
-                ...redSquares,
-              },
-
-              draggingPieceGhostStyle: {
-                opacity: 0
-              },
-
-              draggingPieceStyle: {
-                transform: "scale(1.05)"
-              },
-
-              dropSquareStyle: {
-                boxShadow: "inset 0 0 0 7px #ffffff",
-              },
-
-              darkSquareStyle: {
-                backgroundColor: "#3B4758"
-              },
-              lightSquareStyle: {
-                backgroundColor: "#D0C7B8"
-              },
-            }}/>
+    {allLoading? (
+      <>
+          <section className="spin-center pt">
+            <div className="spinner"></div>
           </section>
-          )} 
-          {!startedGame && canProceed && !processEnded && (
-            <>
-            <div className='start-game-section'>
-              <div className='side-by'>
-                <ChessBishop/>
-                <h2>Practice</h2>
+      </>
+    ) : (
+      <>{Object.keys(user.stats).length > 0? (
+        <>
+          <section className='page-vert'>
+            <div className='page-start'>
+              <article className='dark-box ext'>
+                <div className='side-by'>
+                  <Lightbulb/>
+                  <p className='big-title'>About This Position</p>
+                </div>
+
+                <p className='grey-txt'>{g_variation}</p>
+                <p className='grey-txt'>{g_info}</p>
+              </article>
+
+              <article className='dark-box'>
+                <div className='side-by'>
+                  <ChartNoAxesColumnIncreasing />
+                  <p className='big-title'>Progress</p>
+                </div>
+
+              <div className='side-by gap'>
+                <CircularProgress percentage={Math.round(((g_displayNum) / g_vars.maxPosition) * 100)} size={100} color="#6366f1"/>
+                
+                <div className='down-by'>
+                  <p className='grey-txt'>{g_displayNum} / {g_vars.maxPosition}</p>
+                  <p className='grey-txt'>Positions</p>
+                </div>
               </div>
-              <p className='grey-txt desc'>Survive {g_vars.minMoves} moves from your previous lost positions, data is collected from your stats</p>
-              <button className='start-game-btn' onClick={initialStartGame}>Start</button>
+              </article>
+
+              <article className='dark-box small-box'>
+                <div className='side-by'>
+                  <ShieldCheck />
+                  <p className='big-title'>Survival History</p>
+                </div>
+
+                <div className='side-by surv'>
+                  {survivalHistoryTemp.map((item, index) => (
+                    <p key={index} className={getSurvivalActive(item)}>{item < g_currentPosition + 1 ? <Check size={20}/> : item}</p>
+                  ))}
+                </div>
+              </article>
+
+              <article className='dark-box tips'>
+                <div className='side-by'>
+                  <Spotlight/>
+                  <p className='big-title'>Tips</p>
+                </div>
+
+                <div>
+                  <p className='grey-txt'>The goal is to survive {g_vars.minMoves} moves.</p>
+                  <ul>
+                    <li><p className='grey-txt'>To take is a <span className='bold-txt'>mistake</span></p></li>
+                    <li><p className='grey-txt'>Offense is the best <span className='bold-txt'>defense</span></p></li>
+                    <li><p className='grey-txt'>Counter a threat with a stronger <span className='bold-txt'>threat</span></p></li>
+                    <li><p className='grey-txt'>Improve your least active <span className='bold-txt'>piece</span> </p></li>
+                    <li><p className='grey-txt'>Remove opposing piece's on your side of the <span className='bold-txt'>board</span></p></li>
+                  </ul>
+                </div>
+              </article>
             </div>
-            </>
-          )}
 
-          {(!canProceed && !processEnded) && (
-            <>
-            <CircularProgress _class='smoothAnim' percentage={Math.round(((previewNum - 1) / g_vars.maxPosition) * 100)} size={200} color="#6366f1"/>
-            </>
-          )}
+            <div className='general-chess-area'>
+              <section className='mid-bar'>
+                <article >
+                  <Puzzle size={35}/>
 
+                  <div>
+                    <p className='top-txt'>Position {g_displayNum} / {g_vars.maxPosition}</p>
+                    <p className='grey-txt'>From your lost games</p>
+                  </div>
+                </article>
 
-        </article>
+                <article >
+                  <Shield size={35}/>
 
-        <div className='bottom-btns-p'>
-          <button onClick={() => nextGamePosition(false)}>
-            <Flag/>
-            <p>Skip</p>
-          </button>
+                  <div>
+                    <p className='top-txt'>Survive {g_currentMoveSurvived} more moves</p>
+                    <p className='grey-txt'>Computer is {g_currentColor}</p>
+                  </div>
+                </article>
 
-          <button onClick={() => nextGamePosition(true)}>
-            <RotateCcw/>
-            <p>Restart Position</p>
-          </button>
+                <article >
+                  <Clock size={35}/>
+
+                  <div>
+                    <p className='top-txt'>{g_timeSaved}</p>
+                    <p className='grey-txt'>Time Survived</p>
+                  </div>
+                </article>
+              </section>
+
+              <article className='chess-holder'>
+                {loading? (
+                  <>
+                    <section className="spin-center">
+                      <div className="spinner"></div>
+                    </section>
+                  </>
+                ) : (
+                  <>
+                    {processEnded && (
+                      <>
+                      <section className='results-page'>
+                        <h2>Results</h2>
+                        <ul>
+                          <li className='grey-txt'>{g_currentPosition} Positions completed</li>
+                          <li className='grey-txt'>{g_timeSaved} Time spent</li>
+                        </ul>
+                      </section>
+                      </>
+                    )}
+                    {startedGame && canProceed && !processEnded && (<section className='chess-container smoothAnim'>
+                      <Chessboard options={{
+                        onPieceDrop: movePiece,
+                        onPieceClick: showDots,
+                        onPieceDrag: showDots,
+                        onSquareClick: clickSquare,
+                        onSquareRightClick: rightClickSquare,
+
+                        position: getFen().fen,
+                        allowDragOffBoard: false,
+                        dragActivationDistance: 1.1,
+                        boardOrientation: bordOrientation,
+                        squareStyles: {
+                          ...(lastMove && {
+                            [lastMove.from]: {
+                              backgroundColor: "rgba(255, 255, 51, 0.51)",
+                            },
+                            [lastMove.to]: {
+                              backgroundColor: "rgb(255, 255, 51, 0.51)",
+                            },
+                          }),
+                          ...optionSquares,
+                          ...redSquares,
+                        },
+
+                        draggingPieceGhostStyle: {
+                          opacity: 0
+                        },
+
+                        draggingPieceStyle: {
+                          transform: "scale(1.05)"
+                        },
+
+                        dropSquareStyle: {
+                          boxShadow: "inset 0 0 0 7px #ffffff",
+                        },
+
+                        darkSquareStyle: {
+                          backgroundColor: "#3B4758"
+                        },
+                        lightSquareStyle: {
+                          backgroundColor: "#D0C7B8"
+                        },
+                      }}/>
+                    </section>
+                    )} 
+                    {!startedGame && canProceed && !processEnded && (
+                      <>
+                      <div className='start-game-section'>
+                        <div className='side-by'>
+                          <ChessBishop/>
+                          <h2>Practice</h2>
+                        </div>
+                        <p className='grey-txt desc'>Survive {g_vars.minMoves} moves from your previous lost positions, data is collected from your stats</p>
+                        <button className='start-game-btn' onClick={initialStartGame}>Start</button>
+
+                        {newServInfo?.positionsPracticed == 0 && newServInfo.nextAvaliable && !hasPremium && (
+                          <>
+                          <p>{timeRemainingTxt == 'Available now'? 'Practice again now' : `Practice again in ${timeRemainingTxt}`}</p>
+                          <p className='grey-txt'>Update to <a href='/dashboard/premium' className='purple-txt'>premium</a> for unlimited practice</p>
+                          </>
+                        )}
+                      </div>
+                      </>
+                    )}
+
+                    {(!canProceed && !processEnded) && (
+                      <>
+                      <CircularProgress _class='smoothAnim' percentage={Math.round(((previewNum - 1) / g_vars.maxPosition) * 100)} size={200} color="#6366f1"/>
+                      </>
+                    )}
+                  </>
+                )}
+              </article>
+
+              <div className='bottom-btns-p'>
+                <button onClick={() => nextGamePosition(false)}>
+                  <Flag/>
+                  <p>Skip</p>
+                </button>
+
+                <button onClick={() => nextGamePosition(true, true)}>
+                  <RotateCcw/>
+                  <p>Restart Position</p>
+                </button>
+              </div>
+            </div>
+
+            <section className='page-horizontal'>
+                <div className='left-panel'>
+                  <h2>Game</h2>
+                  
+                  <section className='smoothAnim' id='moves' ref={historyRef}>
+                    {history && (
+                      Object.values(history).map((move, index) => (
+                        <article className='move-parent' key={index}>
+                          <p>{index}.</p>
+
+                          <article className='moves-inside'>
+                            <button className='first-move game-move' onClick={()=>selectPreview(true, index + 1)}>{move.w}</button>
+                            <button className='second-move game-move' onClick={()=>selectPreview(false, index + 1)}>{move.b || ''}</button>
+                          </article>
+                        </article>
+                      ))
+                    )}
+                  </section>
+
+                  <div className='bottom-buttons'>
+                    <button className='style-btn' onClick={previousMove}>{'<'}</button>
+                    <button className='style-btn' onClick={nextMove}>{'>'}</button>
+                    <button className='style-btn' onClick={currentPosition}>start</button>
+                    <button className='style-btn' onClick={startingPosition}>end</button>
+                  </div>
+                </div>
+              </section>
+          </section>
+        </>
+      ) : (
+        <>
+        <div className='stats-txt'>
+          <p>Analyze <a className='purple-txt' href='/dashboard/stats'>stats</a> to access this page. </p>
         </div>
-      </div>
-
-      <section className='page-horizontal'>
-          <div className='left-panel'>
-            <h2>Game</h2>
-            
-            <section className='smoothAnim' id='moves' ref={historyRef}>
-              {history && (
-                Object.values(history).map((move, index) => (
-                  <article className='move-parent' key={index}>
-                    <p>{index}.</p>
-
-                    <article className='moves-inside'>
-                      <button className='first-move game-move' onClick={()=>selectPreview(true, index + 1)}>{move.w}</button>
-                      <button className='second-move game-move' onClick={()=>selectPreview(false, index + 1)}>{move.b || ''}</button>
-                    </article>
-                  </article>
-                ))
-              )}
-            </section>
-
-            <div className='bottom-buttons'>
-              <button className='style-btn' onClick={previousMove}>{'<'}</button>
-              <button className='style-btn' onClick={nextMove}>{'>'}</button>
-              <button className='style-btn' onClick={startingPosition}>start</button>
-              <button className='style-btn' onClick={currentPosition}>end</button>
-            </div>
-          </div>
-        </section>
-    </section>
+        </>
+      )}
+      </>
+    )}
 
     </section>
     </>

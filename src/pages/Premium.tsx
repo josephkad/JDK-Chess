@@ -6,7 +6,7 @@ import { ChartNoAxesColumnIncreasing, Check, Clock, Gem, Infinity, Lock, Pencil,
 function PremiumPage() {
   const {user} = useUserVar();
   const [loading, setLoading] = useState(false);
-
+  
   if (!user) {
     throw new Error('no user found!')
   };
@@ -49,7 +49,7 @@ function PremiumPage() {
                     </article>
 
                     <article className='p-main'>
-                        <p className='p-title'>Advance Stats</p>
+                        <p className='p-title'>Advanced Stats</p>
                         <p className='grey-txt'>Deep insights into your openings, performance, and progress.</p>
                     </article>
                 </div>

@@ -1,6 +1,6 @@
 import { House, Settings, ChartNoAxesCombined, BookOpen, Diamond, Gem } from "lucide-react"
 import { NavLink, Outlet } from "react-router-dom"
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import '../styles/default.css'
 import '../styles/dashboard.css'
 import '../styles/settings.css'
@@ -10,7 +10,7 @@ import '../styles/stats.css'
 function Dashboard() {
     //States
     const [user, setUser] = useState<any>(null);
-
+    const [hasPremium, setHasPremium] = useState(user? (user.subscription.status === "active" && new Date(user.subscription.currentPeriodEnd) > new Date()) : false)
     //Effects
     useEffect(() => {
         fetch('http://localhost:3000/api/user', {
@@ -23,9 +23,10 @@ function Dashboard() {
         .then(data => {
             if (!data) {return;}
             setUser(data);
+            setHasPremium(data? (data.subscription.status === "active" && new Date(data.subscription.currentPeriodEnd) > new Date()) : false)
         })
     }, []);
-
+    
     //Html
     return (
     <>
@@ -67,8 +68,8 @@ function Dashboard() {
                         <p className="profile-name">
                             {user?.displayName}
                         </p>
-                        <p className="profile-plan">
-                            Free Plan
+                        <p className={!hasPremium? 'profile-plan' : 'profile-plan purple-txt'}>
+                            {!hasPremium? 'Free Plan' : 'Premium'}
                         </p>
                     </span>
                 </article>

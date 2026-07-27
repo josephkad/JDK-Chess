@@ -1,5 +1,5 @@
 import '../styles/default.css'
-import { Zap } from 'lucide-react'
+import { ArrowBigDown, ArrowBigUp, Recycle, Search, Target, Zap } from 'lucide-react'
 import { Diamond } from 'lucide-react'
 
 function LandingPage() {
@@ -9,7 +9,7 @@ function LandingPage() {
     <>
     <nav>
       <div className='left'>
-        <h1><Diamond/> Vox Openings</h1>
+        <h1><Diamond/> JDK Chess</h1>
       </div>
 
       <div className='right'>
@@ -26,21 +26,17 @@ function LandingPage() {
         </div>
 
         <h1>
-          Pick an opening.<br />
-          Master it <span className="purple-txt">here.</span>
+          Train from your<br />
+          games. <span className="purple-txt">Get stronger.</span>
         </h1>
 
         <p className='secondary-txt'>
-          Memorize opening lines through repetition, then test yourself without hints.
+          We analyze your lost games, identify your weakest openings, and turn them into personalized training sessions.
         </p>
 
         <span id='btns-pair'>
-          <a className='gradient-btn'>
+          <a className='gradient-btn' href={googleLink}>
             Start Training Now
-          </a>
-
-          <a className='bg-btn'>
-            Try For Free
           </a>
         </span>
       </div>
@@ -53,57 +49,57 @@ function LandingPage() {
     <section id='bottom'>
       <div className='card'>
         <div className='card-icon'>
-          <Zap/>
+          <Search/>
         </div>
 
         <p className='card-title'>
-          Step-by-step learning
+          Opening Analysis
         </p>
 
         <p className='card-info secondary-txt'>
-          Lines show you where to move, turn them off to practice.
+          We break down your games to find openings where you struggle most.
         </p>
       </div>
 
       <div className='card'>
         <div className='card-icon'>
-          <Zap/>
+          <Target/>
         </div>
 
         <p className='card-title'>
-          Active recall
+          Personalized Training
         </p>
 
         <p className='card-info secondary-txt'>
-          Recall every move from memory to strengthen long-term retention.
+          Practice against real positions you've lost in, not random drills.
         </p>
       </div>
 
       <div className='card'>
         <div className='card-icon'>
-          <Zap/>
+          <ArrowBigUp/>
         </div>
 
         <p className='card-title'>
-          Track progress
+          Track Progress
         </p>
 
         <p className='card-info secondary-txt'>
-          Track completion, accuracy, and mastery across every opening.
+          See your improvement over time and turn weaknesses into strength.
         </p>
       </div>
 
       <div className='card'>
         <div className='card-icon'>
-          <Zap/>
+          <Recycle/>
         </div>
 
         <p className='card-title'>
-          Repetition
+          Unlimited Practice
         </p>
 
         <p className='card-info secondary-txt'>
-          Repeat difficult lines until they're effortless.
+          Practice your lost games until you master them.
         </p>
       </div>
     </section>

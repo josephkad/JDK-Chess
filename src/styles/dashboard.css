@@ -94,11 +94,6 @@
     font-size: medium;
 }
 
-.page{
-    display: flex;
-    background-color: #070b16;
-}
-
 Link{
     user-select: none;
 }
