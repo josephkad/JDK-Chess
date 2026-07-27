@@ -6,6 +6,7 @@ import { ChartNoAxesColumnIncreasing, Check, Clock, Gem, Infinity, Lock, Pencil,
 function PremiumPage() {
   const {user} = useUserVar();
   const [loading, setLoading] = useState(false);
+  const port = 'http://localhost:3000'
   
   if (!user) {
     throw new Error('no user found!')
@@ -17,7 +18,7 @@ function PremiumPage() {
 
     try {
         const res = await fetch(
-            "http://localhost:3000/api/create-checkout-session",
+            `${port}/api/create-checkout-session`,
             {
                 method: "POST",
                 credentials: "include"

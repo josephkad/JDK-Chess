@@ -4,12 +4,13 @@ import { useState } from "react";
 function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const defaultSubClass = 'subscription-btn'
+  const port = 'http://localhost:3000'
   const manageSubscription = async () => {
     if (loading) return;
     try{
       setLoading(true);
       const res = await fetch(
-          "http://localhost:3000/api/create-portal-session",
+          `${port}/api/create-portal-session`,
           {
               method: "POST",
               credentials: "include"
@@ -45,7 +46,7 @@ function SettingsPage() {
             </>
           ) : (
             <>
-              Manage Subscription 
+              <p>Manage Subscription</p>
               <ChevronRight/>
             </>
           )}
@@ -58,7 +59,7 @@ function SettingsPage() {
         </div>
 
         <p className="grey-txt marg-top">Sign out of your account on this device.</p>
-        <a className='setting-btn signout-btn' href='http://localhost:3000/logout'>Sign out <LogOut color='#D43A46'/></a>
+        <a className='setting-btn signout-btn' href={`${port}/logout`}>Sign out <LogOut color='#D43A46'/></a>
       </article>
     </section>
     </>

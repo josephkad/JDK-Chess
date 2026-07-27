@@ -1,12 +1,40 @@
 import '../styles/default.css'
-import { ArrowBigDown, ArrowBigUp, Recycle, Search, Target, Zap } from 'lucide-react'
+import { ArrowBigDown, ArrowBigUp, Play, Recycle, Search, Target, Zap } from 'lucide-react'
 import { Diamond } from 'lucide-react'
+import statsThumbnail from '../../public/statsThumbnail.png'
+import { useEffect, useRef, useState, type RefObject } from 'react';
 
 function LandingPage() {
   const googleLink = "http://localhost:3000/auth/google";
+  const [playing, setPlaying] = useState(false)
+  const videoRef = useRef<any>(null)
   
+  useEffect(() => {
+    function clickedOutside(event: MouseEvent) {
+      if (videoRef.current && !videoRef.current.contains(event.target as Node)) {
+        setPlaying(false)
+      }
+    }
+
+    if (playing) {
+      document.addEventListener('mousedown', clickedOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', clickedOutside)
+    }
+  }, [playing])
+
   return (
     <>
+    {playing && (
+      <>
+      <div className='vid-par'>
+        <iframe ref={videoRef} allowFullScreen className='vid' src='https://www.youtube.com/embed/NG-cLiTH8tQ?autoplay=1' allow="autoplay; encrypted-media"/>
+      </div>
+      </>
+    )}
+    
     <nav>
       <div className='left'>
         <h1><Diamond/> JDK Chess</h1>
@@ -18,6 +46,7 @@ function LandingPage() {
         </a>
       </div>
     </nav>
+
 
     <section id='hero'>
       <div className='left'>
@@ -42,7 +71,11 @@ function LandingPage() {
       </div>
 
       <div className='right'>
-        <video></video>
+        <div className='video'>
+          <button className='vid-btn' onClick={() => setPlaying(true)}>
+            <Play size={40} color='rgb(93, 0, 255)'/>
+          </button>
+        </div>
       </div>
     </section>
 

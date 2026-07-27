@@ -11,9 +11,10 @@ function Dashboard() {
     //States
     const [user, setUser] = useState<any>(null);
     const [hasPremium, setHasPremium] = useState(user? (user.subscription.status === "active" && new Date(user.subscription.currentPeriodEnd) > new Date()) : false)
+    const port = 'http://localhost:3000/api/user'
     //Effects
     useEffect(() => {
-        fetch('http://localhost:3000/api/user', {
+        fetch(port, {
             credentials: 'include'
         })
         .then(res => {

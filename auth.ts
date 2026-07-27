@@ -22,12 +22,14 @@ const loggedInURL = loggedOutURL + '/dashboard';
 const app = express();
 const testing = true;
 
+const port = 'http://localhost:3000'
+
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.CLIENT_ID!, //! to remove red lines, it tells typescript that this isnt undefined
       clientSecret: process.env.CLIENT_SECRET!,
-      callbackURL: "http://localhost:3000/auth/google/callback",
+      callbackURL: `${port}/auth/google/callback`,
     },
     async (accessToken, refreshToken, profile, done) => {
       let user = await User.findOne({googleId: profile.id});

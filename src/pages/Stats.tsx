@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useUserVar } from "../userVar";
 import { Clock, Flame, Minus, Swords, Target, Trophy, User, Zap } from "lucide-react";
 
@@ -13,6 +13,9 @@ function StatsPage() {
   const [timeClass, setTimeClass] = useState('blitz')
 
   const [months, setMonths] = useState(4)
+  const [hasPremium, setHasPremium] = useState(user? (user.subscription.status === "active" && new Date(user.subscription.currentPeriodEnd) > new Date()) : false)
+  const maxWithoutPremium : number = 4
+  const port = 'http://localhost:3000'
 
   // functions
   async function analyze(){
@@ -20,7 +23,7 @@ function StatsPage() {
       setCanAnalyze(false);
 
       try{
-        await fetch('http://localhost:3000/api/saveStats', {
+        await fetch(`${port}/api/saveStats`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -32,6 +35,7 @@ function StatsPage() {
         .then(updatedUser => {
           setUser(updatedUser);
           setUserStats(updatedUser.stats[0])
+          setHasPremium(updatedUser? (updatedUser.subscription.status === "active" && new Date(updatedUser.subscription.currentPeriodEnd) > new Date()) : false)
         })
       } catch (err) {
         console.log(err);
@@ -179,17 +183,27 @@ function StatsPage() {
               </article>
 
               <article className="opening-stats">
-                {userStats.openings_won_with.map((opening : any, index : any) => (
-                  <article className="opening-stat-box" key={index}>
-                    <p>{opening[0]}</p>
+                {userStats.openings_won_with.slice(0, hasPremium ? userStats.openings_won_with.length : maxWithoutPremium).map((opening : any, index : any) => (
+                  <>
+                  {index == maxWithoutPremium - 1 && !hasPremium? (
+                    <>
+                    <strong>+{userStats.openings_won_with.length - maxWithoutPremium - 1} more stats with <a className="purple-txt" href='/dashboard/premium'>premium</a></strong>
+                    </>
+                  ) : (
+                    <>
+                      <article className="opening-stat-box" key={index}>
+                        <p>{opening[0]}</p>
 
-                    <article className="opening-stat-box-middle">
-                      <div className="bar"><i style={{width: `${opening[1].percent}%`}}></i></div>
-                      <p>{opening[1].percent + '%'}</p>
-                    </article>
+                        <article className="opening-stat-box-middle">
+                          <div className="bar"><i style={{width: `${opening[1].percent}%`}}></i></div>
+                          <p>{opening[1].percent + '%'}</p>
+                        </article>
 
-                    <strong>{opening[1].games}</strong>
-                  </article>
+                        <strong>{opening[1].games}</strong>
+                      </article>
+                    </>
+                  )}
+                  </>
                 ))}
               </article>
             </article>
@@ -204,17 +218,27 @@ function StatsPage() {
               </article>
 
               <article className="opening-stats">
-                {userStats.openings_lost_to.map((opening : any, index : any) => (
-                  <article className="opening-stat-box" key={index}>
-                    <p>{opening[0]}</p>
+                {userStats.openings_lost_to.slice(0, hasPremium ? userStats.openings_lost_to.length : maxWithoutPremium).map((opening : any, index : any) => (
+                  <>
+                  {index == maxWithoutPremium - 1 && !hasPremium? (
+                    <>
+                    <strong>+{userStats.openings_lost_to.length - maxWithoutPremium - 1} more stats with <a className="purple-txt" href='/dashboard/premium'>premium</a></strong>
+                    </>
+                  ) : (
+                    <>
+                      <article className="opening-stat-box" key={index}>
+                        <p>{opening[0]}</p>
 
-                    <article className="opening-stat-box-middle">
-                      <div className="bar"><i style={{width: `${opening[1].percent}%`}}></i></div>
-                      <p>{opening[1].percent + '%'}</p>
-                    </article>
+                        <article className="opening-stat-box-middle">
+                          <div className="bar"><i style={{width: `${opening[1].percent}%`}}></i></div>
+                          <p>{opening[1].percent + '%'}</p>
+                        </article>
 
-                    <strong>{opening[1].games}</strong>
-                  </article>
+                        <strong>{opening[1].games}</strong>
+                      </article>
+                    </>
+                  )}
+                  </>
                 ))}
               </article>
             </article>
@@ -228,12 +252,21 @@ function StatsPage() {
               </article>
 
               <article className="opening-stats">
-                {userStats.openings_faced.map((opening : any, index : any) => (
-                  <article className="opening-stat-box" key={index}>
-                    <p>{opening[0]}</p>
-                    <strong>{opening[1].games}</strong>
-                  </article>
-                ))}
+                {userStats.openings_faced.slice(0, hasPremium ? userStats.openings_faced.length : maxWithoutPremium).map((opening : any, index : number) => (
+                  <>
+                    {index == maxWithoutPremium - 1 && !hasPremium? (
+                      <>
+                        <strong>+{userStats.openings_faced.length - maxWithoutPremium - 1} more stats with <a className="purple-txt" href='/dashboard/premium'>premium</a></strong>
+                      </>
+                    ) : (
+                      <>
+                        <article className="opening-stat-box" key={index}>
+                          <p>{opening[0]}</p>
+                          <strong>{opening[1].games}</strong>
+                        </article>
+                      </>
+                    )}
+                  </>))}
               </article>
             </article>
           </section>

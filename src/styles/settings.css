@@ -81,7 +81,7 @@
 
 .subscription-btn.loader {
     justify-content: center;
-    min-height: 2.8rem;
+    max-height: 1.5rem;
 }
 
 /* Sign Out Button */

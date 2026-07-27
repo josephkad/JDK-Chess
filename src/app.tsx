@@ -13,10 +13,11 @@ function App() {
     // States
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const port = 'http://localhost:3000'
 
     //Effects
     useEffect(() => {
-        fetch('http://localhost:3000/api/user', {
+        fetch(`${port}/api/user`, {
             credentials: 'include'
         })
         .then(res => {

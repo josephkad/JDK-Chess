@@ -136,11 +136,6 @@
 }
 
 /* Force inner library SVG/Canvas element to scale smoothly without distortion */
-.chess-container > div, 
-.chess-container svg {
-    width: 100% !important;
-    height: 100% !important;
-}
 
 /* Start Screen & Action Buttons */
 .start-game-section {

@@ -33,7 +33,7 @@ type redS = {
 
 const g_vars = {
   maxPosition: 10,
-  minMoves: 2,
+  minMoves: 6,
   subbing: 11,
 }
 
@@ -99,6 +99,8 @@ function PracticePage() {
   const [loading, setLoading] = useState(false)
   const [allLoading, setAllLoading] = useState(true)
   const hasPremium = user? user.subscription?.status === "active" && user.subscription.currentPeriodEnd > new Date() : false;
+
+  const port = 'http://localhost:3000'
 
 
   //  Functions
@@ -693,7 +695,7 @@ function PracticePage() {
     let data : any;
 
     try{
-      res = await fetch('http://localhost:3000/api/get-practice-info', {credentials: 'include'})
+      res = await fetch(`${port}/api/get-practice-info`, {credentials: 'include'})
       data = await res.json()
       
       if (data.positionsPracticed) {
@@ -961,7 +963,7 @@ function PracticePage() {
     let newUser = user
 
     async function getNewUerInfo() {
-      const res = await fetch('http://localhost:3000/api/get-user-info', {credentials: 'include'})
+      const res = await fetch(`${port}/api/get-user-info`, {credentials: 'include'})
       const data = await res.json()
       setUser(data)
       setNewServInfo(data.gameStats)
