@@ -22,6 +22,7 @@ const apiURl = process.env.VITE_API_URL
 const webURL = process.env.VITE_WEB_URL
 const port = process.env.VITE_API_URL;
 const portNum = process.env.PORT || 3000 
+const stripePriceID = process.env.STRIPE_PRICE_ID
 
 const loggedOutURL = webURL!;
 const loggedInURL = loggedOutURL + '/dashboard';
@@ -447,7 +448,7 @@ app.post("/api/create-checkout-session", async (req, res) => {
 
     line_items: [
         {
-            price: "price_1TwoZTCRQpxggYMCnJudIHCt",
+            price: stripePriceID,
             quantity: 1,
         },
     ],
