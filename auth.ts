@@ -541,14 +541,14 @@ app.get('/api/get-practice-info', async (req, res) => {
         nextAvaliable: avaliable
       }
     });
-    console.time("mongo");
+    console.timeEnd("mongo");
 
   }
 
   if (canGiveGame) {
     console.time("random");
     dataSending.randomGame = getRandomGame(user.stats)
-    console.time("random");
+    console.timeEnd("random");
   }
 
   res.json(dataSending)
