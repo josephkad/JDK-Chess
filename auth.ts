@@ -161,7 +161,7 @@ app.get("/auth/google",
     })
 );
 
-app.get('/auth/google/callback', passport.authenticate('google', {
+/*app.get('/auth/google/callback', passport.authenticate('google', {
   failureRedirect: loggedOutURL
 }),
 (req, res) => {
@@ -169,7 +169,19 @@ app.get('/auth/google/callback', passport.authenticate('google', {
     console.log("Headers:", res.getHeaders());
   console.log('other headers:', res.getHeaders()["set-cookie"]);
   res.redirect(loggedInURL);
-});
+});*/
+app.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: loggedOutURL }),
+  (req, res) => {
+    req.session.save(() => {
+      console.log("Session saved");
+      console.log("Headers:", res.getHeaders());
+
+      res.redirect(loggedInURL);
+    });
+  }
+);
 
 app.get('/api/user', (req, res)=>{
     if (!req.isAuthenticated()) {
