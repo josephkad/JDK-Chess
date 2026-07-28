@@ -91,7 +91,6 @@ app.post("/api/stripe/webhook", express.raw({type:'application/json'}), async (r
           currentPeriodEnd: new Date(subscription.items.data[0].current_period_end * 1000)
       }
     },{returnDocument : 'after'});
-    console.log("Paid user:", userId);
   }
 
   if (event.type === "customer.subscription.deleted") {
@@ -108,8 +107,6 @@ app.post("/api/stripe/webhook", express.raw({type:'application/json'}), async (r
             returnDocument: "after"
         }
     );
-
-    console.log("Subscription canceled:");
   }
 
   if (event.type === "customer.subscription.updated") {
@@ -552,7 +549,6 @@ app.get('/api/get-practice-info', async (req, res) => {
         dataSending.nextAvaliable = avaliable
       }
     }
-    console.time("mongo");
 
     await User.findByIdAndUpdate(userId, {
       gameStats: {
@@ -560,14 +556,11 @@ app.get('/api/get-practice-info', async (req, res) => {
         nextAvaliable: avaliable
       }
     });
-    console.timeEnd("mongo");
 
   }
 
   if (canGiveGame) {
-    console.time("random");
     dataSending.randomGame = getRandomGame(user.stats)
-    console.timeEnd("random");
   }
 
   res.json(dataSending)
