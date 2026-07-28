@@ -13,7 +13,7 @@ function App() {
     // States
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const port = 'http://localhost:3000'
+    const port = import.meta.env.VITE_API_URL;
 
     //Effects
     useEffect(() => {

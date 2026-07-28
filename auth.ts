@@ -17,13 +17,14 @@ import { Chess, type Square } from 'chess.js';
 import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-const loggedOutURL = 'http://localhost:5173';
+const port = process.env.VITE_API_URL;
+const portNum = process.env.PORT || 3000 
+
+const loggedOutURL = port!;
 const loggedInURL = loggedOutURL + '/dashboard';
 const app = express();
 const testing = true;
 
-const port = 'http://localhost:3000'
-const portNum = process.env.PORT || 3000 
 
 passport.use(
   new GoogleStrategy(

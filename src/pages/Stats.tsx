@@ -15,7 +15,7 @@ function StatsPage() {
   const [months, setMonths] = useState(4)
   const [hasPremium, setHasPremium] = useState(user? (user.subscription.status === "active" && new Date(user.subscription.currentPeriodEnd) > new Date()) : false)
   const maxWithoutPremium : number = 4
-  const port = 'http://localhost:3000'
+  const port = import.meta.env.VITE_API_URL;
 
   // functions
   async function analyze(){

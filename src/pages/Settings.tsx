@@ -4,7 +4,7 @@ import { useState } from "react";
 function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const defaultSubClass = 'subscription-btn'
-  const port = 'http://localhost:3000'
+  const port = import.meta.env.VITE_API_URL;
   const manageSubscription = async () => {
     if (loading) return;
     try{

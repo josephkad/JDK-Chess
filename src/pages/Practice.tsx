@@ -98,7 +98,7 @@ function PracticePage() {
   const [allLoading, setAllLoading] = useState(true)
   const hasPremium = user? user.subscription?.status === "active" && user.subscription.currentPeriodEnd > new Date() : false;
 
-  const port = 'http://localhost:3000'
+  const port = import.meta.env.VITE_API_URL;
 
 
   //  Functions
