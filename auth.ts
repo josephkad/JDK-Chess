@@ -367,23 +367,41 @@ function getStats(games : Array<any>, chessName : string, timeClass : string) {
   return stats;
 }
 
-function getRandomGame(userStats : any) {
-    if (!userStats) return null;
-    let chosen = null;
-    
-    for (const lost_g of  userStats[0].all_games_lost) {
-      if (chosen == null || Math.floor(Math.random() * 15) == 10) {
-        const loadedGame = new Chess()
-        loadedGame.loadPgn(lost_g.pgn)
-        const loadedGameHistoryLength = loadedGame.history().length
+/*function getRandomGame(userStats : any) {
+  if (!userStats) return null;
+  let chosen = null;
+  
+  for (const lost_g of  userStats[0].all_games_lost) {
+    if (chosen == null || Math.floor(Math.random() * 15) == 10) {
+      const loadedGame = new Chess()
+      loadedGame.loadPgn(lost_g.pgn)
+      const loadedGameHistoryLength = loadedGame.history().length
 
-        if (loadedGameHistoryLength < 10) continue;
-        chosen = lost_g;
-      }
+      if (loadedGameHistoryLength < 10) continue;
+      chosen = lost_g;
     }
-
-    return chosen;
   }
+
+  return chosen;
+}*/
+function getRandomGame(userStats: any) {
+  if (!userStats) return null;
+
+  const games = userStats[0].all_games_lost;
+
+  for (let i = 0; i < 10; i++) {
+    const randomGame = games[Math.floor(Math.random() * games.length)];
+
+    const loadedGame = new Chess();
+    loadedGame.loadPgn(randomGame.pgn);
+
+    if (loadedGame.history().length >= 10) {
+      return randomGame;
+    }
+  }
+
+  return null;
+}
 
 // Content
 app.post('/api/saveStats', async (req, res) => {
