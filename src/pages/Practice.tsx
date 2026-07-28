@@ -11,7 +11,7 @@ import checkmateSound from '../sounds/game-end.mp3'
 import promoteSound from '../sounds/promote.mp3'
 import { useUserVar } from '../userVar';
 import { ChartNoAxesColumnIncreasing, Check, ChessBishop, Clock, Flag, Lightbulb, Puzzle, RotateCcw, Shield, ShieldCheck, Spotlight } from 'lucide-react';
-import {CircularProgress} from '../components/circular'
+import {CircularProgress} from '../components/circular';
 
 type moveHistory = {
   [key: number] : {
