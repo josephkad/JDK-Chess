@@ -453,7 +453,7 @@ app.post("/api/create-portal-session", async (req, res) => {
         customer: user.subscription.stripeCustomerId,
 
         return_url:
-            `${port}/dashboard/settings`
+            `${webURL}/dashboard/settings`
     });
 
     res.json({
