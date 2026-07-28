@@ -55,7 +55,7 @@ function LandingPage() {
         </div>
 
         <h1>
-          Train from your<br />
+          Train from your <br />
           games. <span className="purple-txt">Get stronger.</span>
         </h1>
 
