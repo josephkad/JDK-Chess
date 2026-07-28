@@ -6,7 +6,7 @@ import { ChartNoAxesColumnIncreasing, Check, Clock, Gem, Infinity, Lock, Pencil,
 function PremiumPage() {
   const {user} = useUserVar();
   const [loading, setLoading] = useState(false);
-  const port = 'http://localhost:3000'
+  const port = import.meta.env.VITE_API_URL;
   
   if (!user) {
     throw new Error('no user found!')
