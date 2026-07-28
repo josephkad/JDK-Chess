@@ -8,6 +8,7 @@ function LandingPage() {
   const googleLink = `${port}/auth/google`;
   const [playing, setPlaying] = useState(false)
   const videoRef = useRef<any>(null)
+  console.log(port)
   
   useEffect(() => {
     function clickedOutside(event: MouseEvent) {
