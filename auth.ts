@@ -165,12 +165,14 @@ app.get('/auth/google/callback', passport.authenticate('google', {
   failureRedirect: loggedOutURL
 }),
 (req, res) => {
-  console.log("OAuth user:", req.user);
-  console.log("Session:", req.session);
   res.redirect(loggedInURL);
 });
 
 app.get('/api/user', (req, res)=>{
+  console.log("USER REQUEST");
+    console.log("COOKIE:", req.headers.cookie);
+    console.log("SESSION:", req.session);
+    console.log("REQ.USER:", req.user);
     if (!req.isAuthenticated()) {
         return res.status(401).json({ error: 'Not authenticated' });
     };
