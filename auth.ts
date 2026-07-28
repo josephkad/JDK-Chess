@@ -13,6 +13,7 @@ import cors from 'cors';
 import session from 'express-session';
 import { json } from 'stream/consumers';
 import { Chess, type Square } from 'chess.js';
+import MongoStore from "connect-mongo";
 
 import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -136,11 +137,14 @@ app.post("/api/stripe/webhook", express.raw({type:'application/json'}), async (r
 app.use(express.json());
 app.use(session({secret: process.env.SESSION_SECRET!, resave: false, saveUninitialized: false,
   proxy: true,
-    cookie: {
-        secure: true,
-        httpOnly: true,
-        sameSite: "none"
-    }
+  store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URI!
+  }),
+  cookie: {
+      secure: true,
+      httpOnly: true,
+      sameSite: "none"
+  },
 }))
 app.use(passport.initialize());
 app.use(passport.session());
