@@ -40,8 +40,8 @@ function PremiumPage() {
     <section className='full-page'>
       <div className='p-container'>
         <div className='p-left-side'>
-            <h1>Vox Premium <Gem size={35} color='#7C5CFF'/></h1>
-            <p className='grey-txt'>Unlock the full power of Vox and take your chess to the next level.</p>
+            <h1>JDK Chess Premium <Gem size={35} color='#7C5CFF'/></h1>
+            <p className='grey-txt'>Unlock the full power of JDK Chess and take your chess to the next level.</p>
 
             <div className='side-by for-dark-box'>
                 <div className='p-dark-box'>
@@ -190,7 +190,7 @@ function PremiumPage() {
                 <Star color='#7C5CFF'/>
 
                 <div>
-                    <p className='purple-txt'>Premium members get the most out of Vox.</p>
+                    <p className='purple-txt'>Premium members get the most out of JDK Chess.</p>
                     <p>More practice. Deeper insights. Faster improvement</p>
                 </div>
             </div>

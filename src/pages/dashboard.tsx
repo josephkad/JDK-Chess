@@ -35,7 +35,7 @@ function Dashboard() {
         <aside className="dashboard">
             <section className="top">
                 <article className="top-stat">
-                    <h1>Vox</h1>
+                    <h1>JDK Chess</h1>
                 </article>
             </section>
 
