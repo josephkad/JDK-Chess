@@ -533,6 +533,7 @@ app.get('/api/get-practice-info', async (req, res) => {
         dataSending.nextAvaliable = avaliable
       }
     }
+    console.time("mongo");
 
     await User.findByIdAndUpdate(userId, {
       gameStats: {
@@ -540,10 +541,14 @@ app.get('/api/get-practice-info', async (req, res) => {
         nextAvaliable: avaliable
       }
     });
+    console.time("mongo");
+
   }
 
   if (canGiveGame) {
+    console.time("random");
     dataSending.randomGame = getRandomGame(user.stats)
+    console.time("random");
   }
 
   res.json(dataSending)
