@@ -171,12 +171,17 @@ app.get("/auth/google",
   res.redirect(loggedInURL);
 });*/
 app.get(
-  "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: loggedOutURL }),
+  '/auth/google/callback',
+  passport.authenticate('google'),
   (req, res) => {
-    req.session.save(() => {
+    req.session.save((err) => {
+      if (err) {
+        console.log("Session save error:", err);
+        return res.status(500).send("Session error");
+      }
+
       console.log("Session saved");
-      console.log("Headers:", res.getHeaders());
+      console.log("Headers before redirect:", res.getHeaders());
 
       res.redirect(loggedInURL);
     });
