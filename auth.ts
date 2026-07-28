@@ -127,8 +127,6 @@ app.post("/api/stripe/webhook", express.raw({type:'application/json'}), async (r
             returnDocument: "after"
         }
     );
-
-    console.log("Subscription updated:");
   }
 
   res.json({recieved: true})
@@ -437,10 +435,10 @@ app.post("/api/create-checkout-session", async (req, res) => {
     ],
 
     success_url:
-        `${port}/dashboard?success=true`,
+        `${webURL}/dashboard?success=true`,
 
     cancel_url:
-        `${port}/dashboard/premium`,
+        `${webURL}/dashboard/premium`,
 
     metadata: {
       userId: userId.toString()
