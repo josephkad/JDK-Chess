@@ -1,6 +1,6 @@
-import { House, Settings, ChartNoAxesCombined, BookOpen, Diamond, Gem } from "lucide-react"
+import { Settings, ChartNoAxesCombined, BookOpen, Gem } from "lucide-react"
 import { NavLink, Outlet } from "react-router-dom"
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import '../styles/default.css'
 import '../styles/dashboard.css'
 import '../styles/settings.css'

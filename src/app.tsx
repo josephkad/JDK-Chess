@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, data } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import LandingPage from './pages/landingPage.tsx'
 import PracticePage from './pages/Practice.tsx'
 import Dashboard from './pages/dashboard.tsx'

@@ -60,7 +60,6 @@ function PracticePage() {
   const gameRef = useRef(new Chess());
   const moveRef = useRef(movePiece)
   const {user, setUser} : any = useUserVar();
-  const userStats : any = useState(user?.stats? user.stats[0] : null);
   const didStartGame = useRef(false);
 
   // States
@@ -82,7 +81,6 @@ function PracticePage() {
   const [g_info, g_setInfo] = useState('This position is from a game you lost on May 12, 2025...');
   const [g_timeSaved, g_setTimeSaved] = useState('00:00');
   const [g_OriginalTimeSaved, g_setOriginalTimeSaved] = useState(0);
-  const [g_survival, g_setSurvival] = useState({});
   const [g_currentColor, g_setCurrentColor] = useState('---');
   const [g_displayNum, g_setDisplayNum] = useState(g_currentPosition)
 
@@ -90,9 +88,9 @@ function PracticePage() {
   const [lastPlayedLoopedThrough, setLastPlayedLoopedThrough] = useState(0);
   const [canProceed, setCanProceed] = useState(true);
   const [previewNum, setPreviewNum] = useState(1)
-  const [continueAfterEngine, setContinueAfterEngine] = useState(false);
+  const [, setContinueAfterEngine] = useState(false);
   const [movingOn, setMovingOn] = useState(false);
-  const [processEnded, setProcessEnded] = useState(false)
+  const [processEnded,] = useState(false)
   const [btnDebounce, setBtnDebounce] = useState(false)
   const [newServInfo, setNewServInfo] = useState<any>(null)
   const [timeRemainingTxt, setTimeRemainingTxt] = useState('')
@@ -143,6 +141,8 @@ function PracticePage() {
     const gameCopy = new Chess(gameRef.current.fen()) //new Chess(game.fen());
     let move;
     let wasWhite = false;
+
+    if (wasWhite) {}
 
     try {
         move = gameCopy.move({
@@ -462,69 +462,6 @@ function PracticePage() {
     }
   }
 
-  function evaluatePosition(fen: string): Promise<number> {
-    return new Promise((resolve) => {
-      const engine = evalRef.current;
-
-      let latestEval = 0;
-
-      const chess = new Chess(fen);
-      const whiteToMove = chess.turn() === "w";
-
-      const handler = (event: MessageEvent) => {
-        const line = event.data;
-
-        if (line.includes("score cp")) {
-          const parts = line.split(" ");
-          const index = parts.indexOf("cp");
-
-          if (index !== -1) {
-            let score = Number(parts[index + 1]);
-
-            // convert to white perspective
-            if (!whiteToMove) {
-              score = -score;
-            }
-
-            latestEval = score;
-          }
-        }
-
-
-        if (line.startsWith("bestmove")) {
-          engine.removeEventListener("message", handler);
-          resolve(latestEval);
-        }
-      };
-
-
-      engine.addEventListener("message", handler);
-      engine.postMessage("stop");
-      engine.postMessage(`position fen ${fen}`);
-      engine.postMessage("go depth 15");
-    });
-  }
-
-  function classifyMove(loss:number){
-
-    if(loss <= 10)
-        return "Best";
-
-    if(loss <= 30)
-        return "Excellent";
-
-    if(loss <= 80)
-        return "Good";
-
-    if(loss <= 200)
-        return "Inaccuracy";
-
-    if(loss <= 500)
-        return "Mistake";
-
-    return "Blunder";
-  }
-
   function getSurvivalActive(item : number){
     let classN = 'survival-history '
 
@@ -570,6 +507,8 @@ function PracticePage() {
     let tempPreview : movePreview | null = null
     let lastWhite = false
 
+    if (tempPreview && lastWhite) {}
+
     for (const moveMade of newGameHistory) {
       const newLength = Object.keys(tempHistory).length + 1
       let white = true
@@ -610,7 +549,7 @@ function PracticePage() {
     
     const newBoard = new Chess()
 
-    for (const [key, value] of Object.entries(tempHistory)) {
+    for (const [, value] of Object.entries(tempHistory)) {
       if (stopped) break;
       for (const moveValue of Object.entries(value)) {
         loopedThrough++;
@@ -917,6 +856,8 @@ function PracticePage() {
           let secondsString = ''
           let seconds = timeSaved
           let minutes = 0;
+          minutes = g_OriginalTimeSaved
+          minutes = 0
 
           for (let i = seconds; i > 59; i -= 60) {
             minutes++;

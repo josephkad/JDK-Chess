@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useUserVar } from "../userVar";
 import { Clock, Flame, Minus, Swords, Target, Trophy, User, Zap } from "lucide-react";
 

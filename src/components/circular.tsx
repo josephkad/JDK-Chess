@@ -1,5 +1,3 @@
-import React from 'react';
-
 export function CircularProgress({
   _class = '',
   percentage = 30, 

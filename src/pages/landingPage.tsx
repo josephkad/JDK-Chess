@@ -1,8 +1,7 @@
 import '../styles/default.css'
-import { ArrowBigDown, ArrowBigUp, Play, Recycle, Search, Target, Zap } from 'lucide-react'
+import {  ArrowBigUp, Play, Recycle, Search, Target } from 'lucide-react'
 import { Diamond } from 'lucide-react'
-import statsThumbnail from '../../public/statsThumbnail.png'
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 function LandingPage() {
   const googleLink = "http://localhost:3000/auth/google";
