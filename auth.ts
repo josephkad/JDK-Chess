@@ -27,6 +27,7 @@ const loggedInURL = loggedOutURL + '/dashboard';
 const app = express();
 const testing = true;
 
+app.set("trust proxy", 1);
 
 passport.use(
   new GoogleStrategy(
@@ -133,7 +134,14 @@ app.post("/api/stripe/webhook", express.raw({type:'application/json'}), async (r
 });
 
 app.use(express.json());
-app.use(session({secret: process.env.SESSION_SECRET!, resave: false, saveUninitialized: false}))
+app.use(session({secret: process.env.SESSION_SECRET!, resave: false, saveUninitialized: false,
+  proxy: true,
+    cookie: {
+        secure: true,
+        httpOnly: true,
+        sameSite: "none"
+    }
+}))
 app.use(passport.initialize());
 app.use(passport.session());
 
