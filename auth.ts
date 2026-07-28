@@ -23,6 +23,7 @@ const app = express();
 const testing = true;
 
 const port = 'http://localhost:3000'
+const portNum = process.env.PORT || 3000 
 
 passport.use(
   new GoogleStrategy(
@@ -536,6 +537,6 @@ app.get('/api/get-practice-info', async (req, res) => {
 })
 
 // Listen
-app.listen(3000, () => {
+app.listen(portNum, () => {
     console.log('server running');
 });
