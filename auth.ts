@@ -17,10 +17,12 @@ import { Chess, type Square } from 'chess.js';
 import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
+const apiURl = process.env.VITE_API_URL
+const webURL = process.env.VITE_WEB_URL
 const port = process.env.VITE_API_URL;
 const portNum = process.env.PORT || 3000 
 
-const loggedOutURL = port!;
+const loggedOutURL = webURL!;
 const loggedInURL = loggedOutURL + '/dashboard';
 const app = express();
 const testing = true;
