@@ -165,6 +165,8 @@ app.get('/auth/google/callback', passport.authenticate('google', {
   failureRedirect: loggedOutURL
 }),
 (req, res) => {
+  console.log("OAuth user:", req.user);
+  console.log("Session:", req.session);
   res.redirect(loggedInURL);
 });
 
@@ -536,7 +538,7 @@ app.get('/api/get-practice-info', async (req, res) => {
         dataSending.nextAvaliable = avaliable
   
         if (!avaliable) {
-          avaliable = new Date(Date.now() + 10 * 1000)
+          avaliable = new Date(Date.now() + 24 * 60 * 60 * 1000)
           dataSending.nextAvaliable = avaliable
         }
       }
@@ -545,7 +547,7 @@ app.get('/api/get-practice-info', async (req, res) => {
       remaining = dataSending.positionsPracticed
 
       if (remaining == 0 && !avaliable) {
-        avaliable = new Date(Date.now() + 10 * 1000)
+        avaliable = new Date(Date.now() + 24 * 60 * 60 * 1000)
         dataSending.nextAvaliable = avaliable
       }
     }
