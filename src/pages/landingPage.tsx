@@ -4,7 +4,8 @@ import { Diamond } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react';
 
 function LandingPage() {
-  const googleLink = "http://localhost:3000/auth/google";
+  const port = import.meta.env.VITE_API_URL;
+  const googleLink = `${port}/auth/google`;
   const [playing, setPlaying] = useState(false)
   const videoRef = useRef<any>(null)
   
