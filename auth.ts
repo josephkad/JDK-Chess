@@ -423,10 +423,10 @@ app.post("/api/create-checkout-session", async (req, res) => {
     ],
 
     success_url:
-        "http://localhost:5173/dashboard?success=true",
+        `${port}/dashboard?success=true`,
 
     cancel_url:
-        "http://localhost:5173/dashboard/premium",
+        `${port}/dashboard/premium`,
 
     metadata: {
       userId: userId.toString()
@@ -451,7 +451,7 @@ app.post("/api/create-portal-session", async (req, res) => {
         customer: user.subscription.stripeCustomerId,
 
         return_url:
-            "http://localhost:5173/dashboard/settings"
+            `${port}/dashboard/settings`
     });
 
     res.json({
