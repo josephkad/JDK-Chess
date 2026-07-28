@@ -139,7 +139,8 @@ app.use(session({secret: process.env.SESSION_SECRET!, resave: false, saveUniniti
   cookie: {
       secure: true,
       httpOnly: true,
-      sameSite: "none"
+      sameSite: "none",
+      maxAge: 24 * 60 * 60 * 1000,
   },
 }))
 app.use(passport.initialize());
@@ -171,18 +172,18 @@ app.get("/auth/google",
   res.redirect(loggedInURL);
 });*/
 app.get(
-  '/auth/google/callback',
-  passport.authenticate('google'),
+  "/auth/google/callback",
+  passport.authenticate("google"),
   (req, res) => {
+    req.session.user = req.user;
+
     req.session.save((err) => {
       if (err) {
-        console.log("Session save error:", err);
-        return res.status(500).send("Session error");
+        console.log(err);
+        return res.status(500).send("Session save failed");
       }
 
-      console.log("Session saved");
-      console.log("Headers before redirect:", res.getHeaders());
-
+      console.log("Session:", req.session);
       res.redirect(loggedInURL);
     });
   }
