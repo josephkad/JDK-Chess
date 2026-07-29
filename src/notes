@@ -1,0 +1,87 @@
+EXPRESS
+npm install express
+
+Web server framework
+
+
+PASSPORT
+npm install passport
+TYPESCRIPT: npm install -D @types/passport
+
+Authentication framework
+
+
+GOOGLE OAUTH
+npm install passport-google-oauth20
+TYPESCRIPT: npm install -D @types/passport-google-oauth20
+
+Google OAuth strategy for Passport
+
+
+DOTENV
+npm install dotenv
+
+Loads secrets from .env file
+
+
+MONGOOSE
+npm install mongoose
+
+Connects Node.js to MongoDB
+Provides schemas and models
+
+
+EXPRESS-SESSION
+npm install express-session
+W TYPESCRIPT: npm install -D @types/express-session
+
+Stores login sessions
+Keeps users logged in
+
+NODEMON
+npm install -g nodemon
+OR: npm install -D nodemon
+nodemon SCRIPT.js
+
+auto updates server script
+
+NODEMON W Typescript
+npm install -D ts-node
+
+BYCRYPT
+npm install bcrypt
+TYPESCRIPT: npm install -D @types/bcrypt
+
+for encrypting passwords.
+
+NODEMAILER
+npm install nodemailer
+
+for sending emails
+
+RESEND
+npm install resend
+
+for sending emails
+
+EXPRESS W TYPESCRIPT
+npm install -D @types/express
+
+for running server code with typescript
+
+CORS
+npm install cors
+npm install -D @types/cors
+
+to prevent error due to backend and frontend being on different ports.
+
+ROUTES
+npm install react-router-dom
+
+CHESSBOARD
+npm install react-chessboard chess.js
+
+STRIPE
+npm install stripe
+npm install -g @stripe/cli
+stripe listen --forward-to localhost:3000/api/stripe/webhook
